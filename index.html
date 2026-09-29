@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trigonometria na prática</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=STIX+Two+Text:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --f-display:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-text:"STIX Two Text","Iowan Old Style",Georgia,"Times New Roman",serif;
+  --paper:#F1F6FB;--panel:#FFFFFF;--grid:#E1EAF4;
+  --ink:#12263F;--ink-2:#41586F;--line:#A9BDD1;
+  --sen:#C23A0C;--cos:#1560BD;--tg:#187040;
+  --sen-soft:#FBE2D8;--cos-soft:#D9E9FB;--tg-soft:#D7F0E1;
+  --hi:#F2B600;--hi-soft:#FFF0B8;--on-hi:#12263F;
+  --bad:#B42318;--focus:#1560BD;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0B1F35;--panel:#10294A;--grid:#173456;
+    --ink:#E7F0F9;--ink-2:#A9BDD2;--line:#3A597B;
+    --sen:#FF9A70;--cos:#7DBAFF;--tg:#66DBA0;
+    --sen-soft:#4A2A22;--cos-soft:#183D68;--tg-soft:#144232;
+    --hi:#FFD24A;--hi-soft:#4A3F12;--on-hi:#12263F;
+    --bad:#FF8A80;--focus:#7DBAFF;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0B1F35;--panel:#10294A;--grid:#173456;
+  --ink:#E7F0F9;--ink-2:#A9BDD2;--line:#3A597B;
+  --sen:#FF9A70;--cos:#7DBAFF;--tg:#66DBA0;
+  --sen-soft:#4A2A22;--cos-soft:#183D68;--tg-soft:#144232;
+  --hi:#FFD24A;--hi-soft:#4A3F12;--on-hi:#12263F;
+  --bad:#FF8A80;--focus:#7DBAFF;
+  color-scheme:dark;
+}
+html{scroll-behavior:smooth;scroll-padding-top:calc(env(safe-area-inset-top,0px) + 72px)}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0;background-color:var(--paper);color:var(--ink);
+  font-family:var(--f-text);font-size:1.15rem;line-height:1.7;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:32px 32px;
+  -webkit-text-size-adjust:100%;
+}
+a{color:var(--cos)}
+button,input{font-family:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:0;background:var(--ink);color:var(--paper);padding:.6em 1em;z-index:100}
+.skip:focus{left:8px;top:8px}
+
+/* estrutura */
+.app{display:grid;grid-template-columns:284px minmax(0,1fr);min-height:100vh}
+.rail{position:sticky;top:0;height:100vh;overflow-y:auto;padding:26px 20px 26px 22px;background:var(--paper);border-right:2px solid var(--ink);display:flex;flex-direction:column;gap:18px}
+.brand{font:800 1.6rem/1.02 var(--f-display);letter-spacing:-.025em;color:var(--ink);text-decoration:none}
+.brand small{display:block;font:400 .88rem/1.4 var(--f-text);letter-spacing:0;margin-top:8px;color:var(--ink-2)}
+.meter{height:10px;border:2px solid var(--ink);border-radius:99px;overflow:hidden;background:var(--panel)}
+.meter i{display:block;height:100%;width:0;background:var(--tg);transition:width .4s}
+.meter-txt{margin:6px 0 0;font:600 .85rem var(--f-display);color:var(--ink-2)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.steps a{display:flex;gap:12px;align-items:center;padding:7px 8px;border-radius:4px;text-decoration:none;color:var(--ink);font:600 .95rem/1.25 var(--f-display)}
+.steps a:hover{background:var(--hi-soft)}
+.steps a.on{background:var(--ink);color:var(--paper)}
+.dot{flex:none;width:27px;height:27px;border:2px solid currentColor;border-radius:50%;display:grid;place-items:center;font-size:.8rem}
+.steps li.done .dot{background:var(--tg);border-color:var(--tg);color:var(--paper)}
+.steps li.done .dot span{display:none}
+.steps li.done .dot::after{content:"✓";font-weight:800}
+.topbar{display:none}
+.scrim{display:none}
+main{max-width:980px;padding:0 clamp(16px,4vw,52px) 96px}
+
+/* botões */
+.btn{font:600 .95rem/1.2 var(--f-display);padding:.55em 1.1em;border:2px solid var(--ink);border-radius:999px;background:var(--panel);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-block}
+.btn:hover{background:var(--hi-soft)}
+.btn.sm{font-size:.85rem;padding:.4em .9em}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.primary:hover{background:var(--ink);opacity:.88}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* abertura */
+.hero{padding:clamp(28px,6vw,68px) 0 0}
+.hero h1{font:800 clamp(2.5rem,7.2vw,5rem)/.98 var(--f-display);letter-spacing:-.035em;margin:0 0 .35em;max-width:13ch}
+.lead{font-size:1.28rem;max-width:58ch;color:var(--ink-2);margin:0 0 1.1em}
+
+/* módulos */
+.mod{padding-top:76px}
+.mod-head{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.badge{flex:none;width:2.5rem;height:2.5rem;border:2px solid var(--ink);border-radius:50%;display:grid;place-items:center;font:800 1.1rem var(--f-display)}
+.mod.done .badge{background:var(--tg);border-color:var(--tg);color:var(--paper)}
+.mod.done .badge span{display:none}
+.mod.done .badge::after{content:"✓"}
+.mod h2{font:800 clamp(1.7rem,3.8vw,2.55rem)/1.06 var(--f-display);letter-spacing:-.022em;margin:0}
+.mod h3{font:700 1.25rem/1.2 var(--f-display);margin:34px 0 8px}
+.prose{max-width:64ch}
+.prose p{margin:0 0 1em}
+.eq{display:block;margin:.7em 0 1em;font-size:1.45rem;font-style:italic}
+var,.m{font-style:italic}
+.t-sen{color:var(--sen);font-weight:600}.t-cos{color:var(--cos);font-weight:600}.t-tg{color:var(--tg);font-weight:600}.t-hip{font-weight:600}
+.c-sen{color:var(--sen)}.c-cos{color:var(--cos)}.c-tg{color:var(--tg)}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1.15;margin:0 .18em;font-size:.95em}
+.frac>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .3em}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));border:2px solid var(--ink);margin:22px 0;background:var(--panel);max-width:none}
+.rule{padding:14px 16px 16px;border-right:2px solid var(--ink);border-top:7px solid var(--line)}
+.rule:last-child{border-right:0}
+.rule.s{border-top-color:var(--sen)}.rule.c{border-top-color:var(--cos)}.rule.t{border-top-color:var(--tg)}
+.rule b{display:block;font:800 1.15rem var(--f-display);margin-bottom:4px}
+.rule p{margin:0;font-size:1.05rem;line-height:1.5}
+.note{border-left:6px solid var(--hi);padding:4px 0 4px 16px;margin:18px 0;max-width:64ch}
+
+/* pranchetas */
+.lab{margin:26px 0;background:var(--panel);border:2px solid var(--ink);border-radius:4px;overflow:hidden}
+.lab-bar{display:flex;justify-content:space-between;align-items:center;gap:10px 14px;flex-wrap:wrap;background:var(--ink);color:var(--paper);padding:8px 14px;font:600 .92rem var(--f-display)}
+.lab-bar .acts{display:flex;gap:8px;flex-wrap:wrap}
+.lab-bar .btn{background:transparent;color:var(--paper);border-color:var(--paper)}
+.lab-bar .btn:hover{background:transparent;opacity:.8}
+.lab-bar .btn[aria-pressed="true"]{background:var(--hi);color:var(--on-hi);border-color:var(--hi)}
+.lab-bar :focus-visible{outline-color:var(--hi)}
+svg.canvas{display:block;width:100%;height:auto;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;user-select:none;-webkit-user-select:none}
+svg.canvas.narrow{max-width:520px;margin:0 auto;background-image:none}
+svg.canvas text{font-family:var(--f-display);font-weight:600}
+svg.canvas .lbl{font-size:20px;font-weight:700}
+svg.canvas.drag{touch-action:none;cursor:grab}
+svg.canvas.drag:active{cursor:grabbing}
+.side{stroke-width:7;stroke-linecap:round;transition:stroke .45s}
+.hit{stroke:transparent;stroke-width:38;pointer-events:none;cursor:pointer;fill:none}
+.chal .hit{pointer-events:stroke}
+.handle{animation:pulse 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{50%{transform:scale(1.25)}}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.controls{display:flex;flex-wrap:wrap;gap:12px 26px;padding:12px 16px;border-top:2px solid var(--ink);align-items:center;background:var(--panel)}
+.field{display:flex;flex-direction:column;gap:2px;font:600 .85rem var(--f-display);color:var(--ink-2)}
+.field output{color:var(--ink);font-variant-numeric:tabular-nums}
+.field input[type=range]{width:min(250px,72vw);accent-color:var(--ink)}
+.chk{display:flex;gap:8px;align-items:center;font:600 .88rem var(--f-display);color:var(--ink)}
+.chk input{width:18px;height:18px;accent-color:var(--ink)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-top:2px solid var(--ink);background:var(--panel)}
+.readout>div{padding:10px 14px;border-right:1.5px solid var(--line);border-bottom:1.5px solid var(--line);margin:0 -1.5px -1.5px 0}
+.readout small{display:block;font:600 .78rem/1.25 var(--f-display);color:var(--ink-2)}
+.readout b{font:800 1.4rem/1.25 var(--f-display);font-variant-numeric:tabular-nums}
+.prompt,.dyn{margin:0;padding:12px 16px;border-top:2px solid var(--ink);font-size:1.05rem;line-height:1.55;background:var(--panel)}
+.quick{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;border-top:2px solid var(--ink);background:var(--panel)}
+.tblwrap{overflow-x:auto;border-top:2px solid var(--ink);background:var(--panel)}
+.tbl{border-collapse:collapse;width:100%;min-width:520px;font-size:1rem;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{padding:8px 12px;text-align:center;border-bottom:1.5px solid var(--line)}
+.tbl th{font:700 .82rem var(--f-display);color:var(--ink-2)}
+.hl-sen{background:var(--sen-soft)}.hl-cos{background:var(--cos-soft)}.hl-tg{background:var(--tg-soft)}
+.cell{min-width:82px;padding:6px 10px;border:2px dashed var(--ink-2);border-radius:4px;background:transparent;color:var(--ink);font-size:1.05rem;cursor:pointer}
+.cell:hover{background:var(--hi-soft)}
+.cell .v{display:none}.cell[aria-pressed="true"] .v{display:inline}.cell[aria-pressed="true"] .q{display:none}
+.cell[aria-pressed="true"]{border-style:solid;background:var(--hi-soft)}
+.inp{font:600 1rem var(--f-display);padding:.45em .7em;border:2px solid var(--ink);border-radius:4px;background:var(--panel);color:var(--ink);width:7.5em}
+.drill{padding:14px 16px;border-top:2px solid var(--ink);background:var(--panel)}
+.drill p{margin:0 0 8px}
+
+/* testes e questões */
+.check{margin:36px 0 0;padding:18px 20px 20px;border:2px dashed var(--ink);max-width:64ch;background:var(--panel)}
+.check h3{margin:0 0 6px;font-size:1.05rem}
+.check p{margin:0}
+.opts{display:grid;gap:8px;margin-top:12px}
+.opt{text-align:left;font-size:1.05rem;line-height:1.4;padding:10px 14px;border:2px solid var(--ink);border-radius:4px;background:var(--panel);color:var(--ink);cursor:pointer;display:flex;gap:10px}
+.opt:hover:not(:disabled){background:var(--hi-soft)}
+.opt .l{font:800 .95rem var(--f-display);min-width:1.2em}
+.opt.ok{background:var(--tg-soft);border-color:var(--tg)}
+.opt.no{background:var(--sen-soft);border-color:var(--sen)}
+.opt:disabled{cursor:default}
+.fb{min-height:1.4em;margin-top:10px;font-size:1.02rem}
+.fb.good{color:var(--tg)}.fb.bad{color:var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 6px}
+.vq{border-top:2px solid var(--ink);padding:24px 0 26px}
+.vq-top{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.tag{font:600 .78rem var(--f-display);padding:2px 11px;border:1.5px solid var(--ink);border-radius:99px}
+.tag.alt{background:var(--hi-soft)}
+.vq-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,300px);gap:22px;align-items:start}
+.vq-text{margin:0 0 6px}
+.vq-fig svg{width:100%;height:auto;display:block;background:var(--panel);border:2px solid var(--ink);border-radius:4px}
+.vq-fig svg text{font-family:var(--f-display);font-weight:600}
+.vq-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.hintbox,.solbox{margin:12px 0 0;padding:10px 14px;border-left:6px solid var(--hi);background:var(--hi-soft);font-size:1.03rem;line-height:1.55}
+.solbox{border-left-color:var(--tg);background:var(--tg-soft);padding-left:34px}
+.solbox li{margin:4px 0}
+.score{font:700 1rem var(--f-display);margin:8px 0 0}
+.src{max-width:64ch;font-size:.98rem}
+footer{margin-top:80px;padding-top:20px;border-top:2px solid var(--ink);color:var(--ink-2);font-size:1rem;max-width:64ch}
+
+/* telas menores */
+@media (max-width:980px){
+  .app{display:block}
+  .rail{position:fixed;top:0;bottom:0;left:0;height:auto;width:min(86vw,330px);z-index:40;transform:translateX(-104%);visibility:hidden;transition:transform .25s,visibility .25s;padding-top:calc(26px + env(safe-area-inset-top,0px));padding-bottom:calc(26px + env(safe-area-inset-bottom,0px))}
+  .rail.open{transform:none;visibility:visible}
+  .scrim.on{display:block;position:fixed;inset:0;background:rgba(6,16,30,.55);z-index:35}
+  .topbar{display:flex;position:sticky;top:env(safe-area-inset-top,0px);z-index:30;align-items:center;gap:12px;padding:10px 16px;background:var(--paper);border-bottom:2px solid var(--ink)}
+  .tb-title{font:800 1.05rem var(--f-display);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tb-count{font:700 .85rem var(--f-display);color:var(--ink-2)}
+  .vq-body{grid-template-columns:1fr}
+  .mod{padding-top:60px}
+}
+@media (max-width:560px){
+  body{font-size:1.06rem}
+  .rule{border-right:0;border-bottom:2px solid var(--ink)}.rule:last-child{border-bottom:0}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#conteudo">Ir para o conteúdo</a>
+<div class="scrim" id="scrim"></div>
+<div class="app">
+<aside class="rail" id="rail" aria-label="Trilha de estudo">
+  <a class="brand" href="#inicio">Trigonometria na prática<small>Do triângulo retângulo às leis dos senos e dos cossenos, com questões de vestibular.</small></a>
+  <div>
+    <div class="meter" aria-hidden="true"><i id="meterFill"></i></div>
+    <p class="meter-txt" id="meterTxt">0 de 11 módulos</p>
+  </div>
+  <ol class="steps" id="steps"></ol>
+  <button class="btn sm" id="tema" type="button">Alternar tema claro e escuro</button>
+</aside>
+<div class="col">
+<div class="topbar">
+  <button class="btn sm" id="menu" type="button" aria-expanded="false" aria-controls="rail">Trilha</button>
+  <span class="tb-title">Trigonometria na prática</span>
+  <span class="tb-count" id="tbCount"></span>
+</div>
+<main id="conteudo">
+
+<header class="hero" id="inicio">
+  <h1>Como medir uma torre sem subir nela?</h1>
+  <p class="lead">A trigonometria nasceu para responder perguntas assim: a altura de uma montanha, a largura de um rio, a distância até um navio. Aqui você aprende do zero, mexendo nas figuras, até chegar às leis dos senos e dos cossenos e resolver questões de vestibular.</p>
+  <figure class="lab">
+    <div class="lab-bar"><span>Arraste a bolinha amarela e veja as três razões mudarem</span></div>
+    <svg id="heroSvg" class="canvas drag" viewBox="0 0 600 340" role="img" aria-label="Triângulo retângulo com ângulo ajustável e três medidores: seno, cosseno e tangente"></svg>
+  </figure>
+  <p><a class="btn primary" href="#m1">Começar pelo módulo 1</a></p>
+</header>
+
+<section class="mod" id="m1" aria-labelledby="m1h">
+  <div class="mod-head"><span class="badge"><span>1</span></span><h2 id="m1h">Os nomes dos lados</h2></div>
+  <div class="prose">
+    <p>Todo triângulo retângulo tem um ângulo de 90° e dois ângulos agudos. O lado que fica de frente para o ângulo reto é o mais comprido de todos e se chama <span class="t-hip">hipotenusa</span>. Os outros dois são os catetos.</p>
+    <p>O detalhe que confunde muita gente é que o nome dos catetos depende do ângulo que você escolheu como referência. O <span class="t-sen">cateto oposto</span> fica de frente para esse ângulo. O <span class="t-cos">cateto adjacente</span> é o que encosta nele. Troque a referência na prancheta e veja os nomes mudarem de lugar, enquanto a hipotenusa continua a mesma.</p>
+    <p>Quando se sentir seguro, ligue o modo desafio e toque no lado que o texto pedir.</p>
+  </div>
+  <div id="lab-m1"></div>
+  <div class="check" id="check-m1"></div>
+</section>
+
+<section class="mod" id="m2" aria-labelledby="m2h">
+  <div class="mod-head"><span class="badge"><span>2</span></span><h2 id="m2h">A razão que não muda</h2></div>
+  <div class="prose">
+    <p>Desenhe um triângulo retângulo com um ângulo de 35°. Agora desenhe outro maior, com o mesmo ângulo. Os lados ficam mais compridos, mas a forma é a mesma: são triângulos semelhantes. E em triângulos semelhantes, a razão entre dois lados correspondentes não muda.</p>
+    <p>Essa é a ideia inteira da trigonometria: a razão depende só do ângulo, nunca do tamanho do triângulo. Mexa nos dois controles abaixo e compare as duas últimas colunas da tabela.</p>
+  </div>
+  <div id="lab-m2"></div>
+  <div class="check" id="check-m2"></div>
+</section>
+
+<section class="mod" id="m3" aria-labelledby="m3h">
+  <div class="mod-head"><span class="badge"><span>3</span></span><h2 id="m3h">Seno, cosseno e tangente</h2></div>
+  <div class="prose">
+    <p>Como a razão entre dois lados só depende do ângulo, ela merece um nome próprio. São três razões, e você vai usá-las o tempo todo.</p>
+  </div>
+  <div class="rules">
+    <div class="rule s"><b class="c-sen">Seno</b><p><var>sen θ</var> = <span class="frac"><span>cateto oposto</span><span>hipotenusa</span></span></p></div>
+    <div class="rule c"><b class="c-cos">Cosseno</b><p><var>cos θ</var> = <span class="frac"><span>cateto adjacente</span><span>hipotenusa</span></span></p></div>
+    <div class="rule t"><b class="c-tg">Tangente</b><p><var>tg θ</var> = <span class="frac"><span>cateto oposto</span><span>cateto adjacente</span></span></p></div>
+  </div>
+  <div class="prose">
+    <p>Em vez de decorar, imagine uma formiguinha subindo uma rampa. Cada metro que ela anda pela rampa, que é a hipotenusa, rende uma subida de sen θ e um avanço de cos θ no chão. A tangente compara os dois: quanto ela sobe para cada metro que avança. Por isso a tangente mede a inclinação de uma rampa.</p>
+  </div>
+  <div id="lab-m3"></div>
+  <div class="prose">
+    <p>Se ajudar, existe um truque vindo do inglês: SOH CAH TOA. Seno é Oposto sobre Hipotenusa, Cosseno é Adjacente sobre Hipotenusa e Tangente é Oposto sobre Adjacente.</p>
+  </div>
+  <div class="check" id="check-m3"></div>
+</section>
+
+<section class="mod" id="m4" aria-labelledby="m4h">
+  <div class="mod-head"><span class="badge"><span>4</span></span><h2 id="m4h">Ângulos notáveis</h2></div>
+  <div class="prose">
+    <p>Três ângulos aparecem tanto em provas que vale conhecê-los de cabeça: 30°, 45° e 60°. Você não precisa decorar uma tabela às cegas, porque os valores saem de duas figuras simples. Aperte o botão da prancheta para ver de onde eles vêm.</p>
+  </div>
+  <div id="lab-m4"></div>
+  <div class="prose">
+    <h3>Vire as cartas</h3>
+    <p>Tente lembrar cada valor antes de virar a carta. Repare no padrão do seno: raiz de 1, raiz de 2 e raiz de 3, todas sobre 2. O cosseno é o mesmo padrão de trás para frente, e a tangente é o seno dividido pelo cosseno.</p>
+  </div>
+  <div id="lab-m4b"></div>
+  <div class="prose"><h3>Treino relâmpago</h3><p>Use √2 ≈ 1,41 e √3 ≈ 1,73 se quiser conferir com decimais.</p></div>
+  <div id="lab-m4c"></div>
+  <div class="check" id="check-m4"></div>
+</section>
+
+<section class="mod" id="m5" aria-labelledby="m5h">
+  <div class="mod-head"><span class="badge"><span>5</span></span><h2 id="m5h">A relação fundamental</h2></div>
+  <div class="prose">
+    <p>Desenhe um triângulo retângulo de hipotenusa 1. O cateto oposto vale exatamente sen θ e o adjacente vale cos θ. Pelo teorema de Pitágoras, os quadrados dos catetos somam o quadrado da hipotenusa:</p>
+    <span class="eq">sen² θ + cos² θ = 1</span>
+    <p>Mexa no ângulo e veja a barra: as duas partes trocam de tamanho, mas o total sempre fecha em 1. Na prática, se você conhece o seno, o cosseno sai sem precisar do triângulo.</p>
+    <p>Há duas outras relações úteis. A tangente é o seno dividido pelo cosseno. E os dois ângulos agudos de um triângulo retângulo somam 90°, então o seno de um é o cosseno do outro.</p>
+  </div>
+  <div id="lab-m5"></div>
+  <div class="check" id="check-m5"></div>
+</section>
+
+<section class="mod" id="m6" aria-labelledby="m6h">
+  <div class="mod-head"><span class="badge"><span>6</span></span><h2 id="m6h">Medindo o inalcançável</h2></div>
+  <div class="prose">
+    <p>Agora a pergunta do início da página. Você mede a sombra da torre e o ângulo do sol. A altura é o cateto oposto a esse ângulo e a sombra é o cateto adjacente. Com a tangente, a altura sai direto: <var>altura = sombra × tg θ</var>.</p>
+    <p>O ângulo entre a horizontal e a linha de visão para cima se chama ângulo de elevação. Para baixo, ângulo de depressão. Descubra a altura da torre abaixo e confira.</p>
+  </div>
+  <div id="lab-m6"></div>
+  <div class="check" id="check-m6"></div>
+</section>
+
+<section class="mod" id="m7" aria-labelledby="m7h">
+  <div class="mod-head"><span class="badge"><span>7</span></span><h2 id="m7h">O ciclo trigonométrico</h2></div>
+  <div class="prose">
+    <p>Até aqui os ângulos eram agudos. O ciclo trigonométrico estende as razões para qualquer ângulo. É uma circunferência de raio 1 com centro na origem. Um ponto que gira a partir do eixo horizontal, no sentido anti-horário, forma um ângulo θ. O cosseno é a posição horizontal do ponto e o seno é a sua altura. Como o raio vale 1, é o mesmo triângulo de antes, agora livre para girar.</p>
+    <p>Os ângulos também podem ser medidos em radianos. Um radiano é o ângulo cujo arco tem o mesmo comprimento do raio. A volta completa tem 2π rad e meia volta tem π rad, que são 180°.</p>
+    <p>Do lado direito, a figura desenha o gráfico enquanto o ponto gira. Arraste o ponto, aperte Girar ou escolha um ângulo nos botões.</p>
+  </div>
+  <div id="lab-m7"></div>
+  <div class="prose">
+    <p>Os sinais dependem do quadrante. No primeiro, seno, cosseno e tangente são positivos. No segundo, só o seno. No terceiro, só a tangente. No quarto, só o cosseno. Para ângulos grandes, tire voltas inteiras de 360° e reduza ao primeiro quadrante usando o ângulo de referência, aquele que o ponto forma com o eixo horizontal.</p>
+  </div>
+  <div class="check" id="check-m7"></div>
+</section>
+
+<section class="mod" id="m8" aria-labelledby="m8h">
+  <div class="mod-head"><span class="badge"><span>8</span></span><h2 id="m8h">Lei dos senos</h2></div>
+  <div class="prose">
+    <p>Fora do triângulo retângulo precisamos de ferramentas novas. A lei dos senos diz que, em qualquer triângulo, cada lado dividido pelo seno do ângulo oposto dá o mesmo número. E esse número tem significado geométrico: é o diâmetro da circunferência que passa pelos três vértices.</p>
+    <span class="eq"><span class="frac"><span>a</span><span>sen A</span></span> = <span class="frac"><span>b</span><span>sen B</span></span> = <span class="frac"><span>c</span><span>sen C</span></span> = 2R</span>
+    <p>Ela funciona quando você conhece um par completo, isto é, um lado e o ângulo oposto a ele, e mais um dado qualquer. Mexa nos ângulos e no raio: os três quocientes acompanham sempre o diâmetro.</p>
+  </div>
+  <div id="lab-m8"></div>
+  <div class="check" id="check-m8"></div>
+</section>
+
+<section class="mod" id="m9" aria-labelledby="m9h">
+  <div class="mod-head"><span class="badge"><span>9</span></span><h2 id="m9h">Lei dos cossenos</h2></div>
+  <div class="prose">
+    <p>A lei dos cossenos é o teorema de Pitágoras com uma correção para triângulos que não têm ângulo reto. Ela liga os três lados a um ângulo:</p>
+    <span class="eq">c² = a² + b² − 2ab · cos γ</span>
+    <p>Aqui γ é o ângulo entre os lados a e b, oposto ao lado c. Imagine dois palitos presos por uma dobradiça. O terceiro lado é a distância entre as pontas e depende de quanto a dobradiça está aberta. Com 90° o cosseno vale zero e sobra Pitágoras. Fechando mais, o termo de correção diminui o resultado. Abrindo além de 90°, o cosseno fica negativo e a distância cresce.</p>
+  </div>
+  <div id="lab-m9"></div>
+  <div class="prose">
+    <p>A mesma lei serve para achar ângulos quando os três lados são conhecidos: <var>cos γ = (a² + b² − c²) ÷ (2ab)</var>.</p>
+  </div>
+  <div class="check" id="check-m9"></div>
+</section>
+
+<section class="mod" id="m10" aria-labelledby="m10h">
+  <div class="mod-head"><span class="badge"><span>10</span></span><h2 id="m10h">Qual lei usar?</h2></div>
+  <div class="prose">
+    <p>Diante de um triângulo qualquer, a escolha depende do que o enunciado entrega. A lei dos senos serve quando há dois ângulos e um lado, ou dois lados e um ângulo oposto a um deles. A lei dos cossenos serve quando há dois lados e o ângulo entre eles, ou quando os três lados são conhecidos. Se o triângulo for retângulo, seno, cosseno e tangente costumam bastar.</p>
+    <p>Treine com o jogo abaixo. Faça três acertos seguidos para concluir este módulo.</p>
+  </div>
+  <div id="lab-m10"></div>
+</section>
+
+<section class="mod" id="m11" aria-labelledby="m11h">
+  <div class="mod-head"><span class="badge"><span>11</span></span><h2 id="m11h">Questões de vestibular</h2></div>
+  <div class="prose">
+    <p>As questões abaixo são adaptações. Mantive a ideia de questões que já apareceram na Fuvest, na Unesp, na Unicamp e na Famerp, mas troquei números e enunciados. Tente resolver no papel antes de abrir a dica. Responda pelo menos cinco para concluir o módulo.</p>
+  </div>
+  <div class="chips" id="vqFilter" role="group" aria-label="Filtrar por assunto"></div>
+  <p class="score" id="vqScore" aria-live="polite"></p>
+  <div id="vqList"></div>
+  <div class="prose src">
+    <h3>Onde ver as provas originais</h3>
+    <p>Para praticar com o texto oficial, procure os cadernos nos sites das bancas. Estas páginas reúnem questões de trigonometria com resolução:
+    <a href="https://www.projetoagathaedu.com.br/questoes-vestibular/matematica/trigonometria/lei-dos-senos-e-cossenos.php" target="_blank" rel="noopener">lei dos senos e cossenos</a>,
+    <a href="https://www.projetoagathaedu.com.br/questoes-vestibular/matematica/trigonometria/triangulo-retangulo.php" target="_blank" rel="noopener">triângulo retângulo</a> e
+    <a href="https://vestibulares.estrategia.com/portal/materias/matematica/trigonometria-no-triangulo-retangulo/" target="_blank" rel="noopener">resumo com questões comentadas</a>.</p>
+  </div>
+</section>
+
+<footer>Feito para estudar por conta própria. As figuras respondem ao toque e ao mouse, então mexa em tudo. Seu progresso fica salvo neste navegador.</footer>
+</main>
+</div>
+</div>
+<script>
+(()=>{
+'use strict';
+/* ---------- utilidades ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const rad=d=>d*Math.PI/180, deg=r=>r*180/Math.PI;
+const n=(x,d=2)=>{let s=(Math.abs(x)<0.5*Math.pow(10,-d)?0:x).toFixed(d).replace('.',',');return s.replace('-','−')};
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const rnd=k=>Math.floor(Math.random()*k);
+const pick=a=>a[rnd(a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const reduce=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+const store={
+  get(k,f){try{const v=localStorage.getItem(k);return v==null?f:JSON.parse(v)}catch(e){return f}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function tween(ms,fn,done){
+  if(reduce){fn(1);if(done)done();return{stop(){}}}
+  let t0=null,raf=0,stopped=false;
+  const step=t=>{
+    if(stopped)return;
+    if(t0==null)t0=t;
+    const p=Math.min(1,(t-t0)/ms);
+    fn(p);
+    if(p<1)raf=requestAnimationFrame(step);else if(done)done();
+  };
+  raf=requestAnimationFrame(step);
+  return{stop(){stopped=true;cancelAnimationFrame(raf)}};
+}
+function drag(svg,o){
+  let on=false;
+  const pt=e=>{const r=svg.getBoundingClientRect();const vb=svg.viewBox.baseVal;return{x:(e.clientX-r.left)*vb.width/r.width+vb.x,y:(e.clientY-r.top)*vb.height/r.height+vb.y}};
+  svg.addEventListener('pointerdown',e=>{
+    const p=pt(e);
+    if(o.start&&!o.start(p))return;
+    on=true;
+    try{svg.setPointerCapture(e.pointerId)}catch(_){}
+    o.move(p);e.preventDefault();
+  });
+  svg.addEventListener('pointermove',e=>{if(on)o.move(pt(e))});
+  const off=()=>{on=false;if(o.end)o.end()};
+  svg.addEventListener('pointerup',off);
+  svg.addEventListener('pointercancel',off);
+}
+
+/* ---------- ajudantes de SVG e de interface ---------- */
+const ln=(x1,y1,x2,y2,c='var(--ink)',w=2.5,ex='')=>`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" style="stroke:${c};stroke-width:${w};stroke-linecap:round" ${ex}/>`;
+const tx=(x,y,s,c='var(--ink)',sz=20,st='',at='')=>`<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" style="fill:${c};font-size:${sz}px;${st}" ${at}>${s}</text>`;
+const circ=(x,y,r,fill='none',stroke='var(--ink)',w=2,ex='')=>`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" style="fill:${fill};stroke:${stroke};stroke-width:${w}" ${ex}/>`;
+const pth=(d,fill='none',stroke='var(--ink)',w=2,ex='')=>`<path d="${d}" style="fill:${fill};stroke:${stroke};stroke-width:${w};stroke-linejoin:round;stroke-linecap:round" ${ex}/>`;
+const fr=(a,b)=>`<span class="frac"><span>${a}</span><span>${b}</span></span>`;
+function arcD(V,U,W,r){
+  const a1=Math.atan2(U.y-V.y,U.x-V.x),a2=Math.atan2(W.y-V.y,W.x-V.x);
+  let d=a2-a1;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;
+  const p1=[V.x+r*Math.cos(a1),V.y+r*Math.sin(a1)],p2=[V.x+r*Math.cos(a1+d),V.y+r*Math.sin(a1+d)];
+  const arc=`A${r} ${r} 0 0 ${d>0?1:0} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  return{d:`M${p1[0].toFixed(1)} ${p1[1].toFixed(1)} ${arc}`,sector:`M${V.x.toFixed(1)} ${V.y.toFixed(1)} L${p1[0].toFixed(1)} ${p1[1].toFixed(1)} ${arc} Z`,mid:a1+d/2};
+}
+const shell=(id,o)=>`<figure class="lab"><div class="lab-bar"><span>${o.title}</span><span class="acts">${o.acts||''}</span></div><svg id="${id}" class="canvas${o.drag?' drag':''}${o.narrow?' narrow':''}" viewBox="${o.vb||'0 0 600 340'}" role="img" aria-label="${o.label||''}"></svg>${o.controls?`<div class="controls">${o.controls}</div>`:''}${o.readout!=null?`<div class="readout" id="${id}-read">${o.readout}</div>`:''}${o.after||''}</figure>`;
+const fld=(id,label,min,max,step,val,unit='')=>`<label class="field"><span>${label}: <output id="${id}-o">${String(val).replace('.',',')}${unit}</output></span><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}"></label>`;
+function bind(id,cb,unit=''){
+  const i=$('#'+id),o=$('#'+id+'-o');
+  const show=()=>{o.textContent=String(parseFloat(i.value)).replace('.',',')+unit};
+  i.addEventListener('input',()=>{show();cb(parseFloat(i.value))});
+  return{set(v){i.value=v;show()},get(){return parseFloat(i.value)}};
+}
+
+/* ---------- tema, trilha e progresso ---------- */
+const root=document.documentElement;
+const MODS=[['m1','Os nomes dos lados'],['m2','A razão que não muda'],['m3','Seno, cosseno e tangente'],['m4','Ângulos notáveis'],['m5','A relação fundamental'],['m6','Medindo o inalcançável'],['m7','O ciclo trigonométrico'],['m8','Lei dos senos'],['m9','Lei dos cossenos'],['m10','Qual lei usar?'],['m11','Questões de vestibular']];
+let done=new Set(store.get('trig-done',[]));
+function renderProgress(){
+  $$('#steps li').forEach(li=>li.classList.toggle('done',done.has(li.dataset.id)));
+  MODS.forEach(([id])=>{const s=$('#'+id);if(s)s.classList.toggle('done',done.has(id))});
+  const k=MODS.filter(([id])=>done.has(id)).length;
+  $('#meterFill').style.width=(100*k/MODS.length)+'%';
+  $('#meterTxt').textContent=`${k} de ${MODS.length} módulos`;
+  $('#tbCount').textContent=`${k}/${MODS.length}`;
+}
+function markDone(id){if(done.has(id))return;done.add(id);store.set('trig-done',[...done]);renderProgress()}
+function initShell(){
+  $('#steps').innerHTML=MODS.map(([id,t],i)=>`<li data-id="${id}"><a href="#${id}"><span class="dot"><span>${i+1}</span></span><span>${t}</span></a></li>`).join('');
+  const saved=store.get('trig-theme',null);
+  if(saved)root.dataset.theme=saved;
+  $('#tema').addEventListener('click',()=>{
+    const cur=root.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    const nx=cur==='dark'?'light':'dark';
+    root.dataset.theme=nx;store.set('trig-theme',nx);
+  });
+  const rail=$('#rail'),scrim=$('#scrim'),menu=$('#menu');
+  const setMenu=o=>{rail.classList.toggle('open',o);scrim.classList.toggle('on',o);menu.setAttribute('aria-expanded',String(o))};
+  menu.addEventListener('click',()=>setMenu(!rail.classList.contains('open')));
+  scrim.addEventListener('click',()=>setMenu(false));
+  $$('#steps a').forEach(a=>a.addEventListener('click',()=>setMenu(false)));
+  if('IntersectionObserver' in window){
+    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){$$('#steps a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id))}})},{rootMargin:'-35% 0px -60% 0px'});
+    $$('.mod').forEach(s=>io.observe(s));
+  }
+  renderProgress();
+}
+
+/* ---------- testes rápidos ---------- */
+const CHECKS={
+  m1:{q:'Qual lado mantém o mesmo nome, seja qual for o ângulo de referência?',o:['Cateto oposto','Cateto adjacente','Hipotenusa'],c:2,e:'A hipotenusa está sempre de frente para o ângulo reto. Os catetos trocam de nome quando a referência muda.'},
+  m2:{q:'Você dobra todos os lados de um triângulo retângulo sem mudar os ângulos. O que acontece com sen θ?',o:['Dobra','Fica igual','Cai pela metade'],c:1,e:'A razão depende só do ângulo. Os lados dobram, mas a divisão continua dando o mesmo número.'},
+  m3:{q:'Uma rampa de 10 m forma 30° com o chão e sen 30° = 0,5. Quanto ela sobe?',o:['5 m','8,7 m','10 m'],c:0,e:'Subida = comprimento × seno = 10 × 0,5 = 5 m.'},
+  m4:{q:'Quanto vale cos 60°?',o:['√3/2','1/2','√2/2'],c:1,e:'O cosseno de 60° é igual ao seno de 30°, que vale 1/2.'},
+  m5:{q:'Se sen θ = 0,6 e θ é agudo, quanto vale cos θ?',o:['0,4','0,64','0,8'],c:2,e:'0,6² + cos² θ = 1, então cos² θ = 0,64 e cos θ = 0,8.'},
+  m6:{q:'Com o sol a 45°, a sombra de um poste mede 8 m. Qual é a altura do poste?',o:['4 m','8 m','11,3 m'],c:1,e:'Como tg 45° = 1, a altura é igual à sombra.'},
+  m7:{q:'Quanto vale sen 210°?',o:['1/2','−1/2','−√3/2'],c:1,e:'210° está no 3º quadrante, onde o seno é negativo. O ângulo de referência é 30°, e sen 30° = 1/2.'},
+  m8:{q:'Num triângulo com A = 30°, B = 45° e a = 10, quanto mede b?',o:['5√2','10√2','20'],c:1,e:'b = a · sen B ÷ sen A = 10 · (√2/2) ÷ (1/2) = 10√2.'},
+  m9:{q:'Dois lados medem 5 e 8 e formam um ângulo de 60°. Quanto mede o terceiro lado?',o:['5','7','13'],c:1,e:'c² = 25 + 64 − 2·5·8·(1/2) = 49, então c = 7.'}
+};
+function mountChecks(){
+  Object.keys(CHECKS).forEach(id=>{
+    const box=$('#check-'+id),c=CHECKS[id];
+    if(!box)return;
+    box.innerHTML=`<h3>Teste rápido</h3><p>${c.q}</p><div class="opts">${c.o.map((t,i)=>`<button class="opt" type="button" data-i="${i}"><span class="l">${'ABC'[i]}</span><span>${t}</span></button>`).join('')}</div><p class="fb" aria-live="polite"></p>`;
+    const fb=$('.fb',box);
+    $$('.opt',box).forEach(b=>b.addEventListener('click',()=>{
+      if(+b.dataset.i===c.c){
+        b.classList.add('ok');$$('.opt',box).forEach(x=>x.disabled=true);
+        fb.className='fb good';fb.textContent='Correto. '+c.e;markDone(id);
+      }else{
+        b.classList.add('no');b.disabled=true;
+        fb.className='fb bad';fb.textContent='Ainda não. Releia o texto acima e tente outra alternativa.';
+      }
+    }));
+  });
+}
+
+/* ---------- abertura ---------- */
+function hero(){
+  const svg=$('#heroSvg');
+  let th=6,touched=false;
+  const P={x:52,y:296},H=230;
+  function bar(y,lab,val,max,col,sub){
+    return tx(428,y,lab,col,22,'font-weight:800')
+      +tx(578,y,n(val,2),col,22,'font-weight:800','text-anchor="end"')
+      +`<rect x="428" y="${y+10}" width="150" height="16" rx="3" style="fill:none;stroke:var(--ink);stroke-width:2"/>`
+      +`<rect x="428" y="${y+10}" width="${(150*Math.min(1,val/max)).toFixed(1)}" height="16" rx="3" style="fill:${col}"/>`
+      +tx(428,y+50,sub,'var(--ink-2)',15);
+  }
+  function draw(){
+    const t=rad(th),c=Math.cos(t),s=Math.sin(t);
+    const Q={x:P.x+H*c,y:P.y},T={x:Q.x,y:P.y-H*s};
+    const mx=(P.x+T.x)/2,my=(P.y+T.y)/2,ang=-th;
+    const nx=-s,ny=-c;
+    let o='';
+    o+=`<path d="M${P.x} ${P.y}L${Q.x.toFixed(1)} ${Q.y}L${T.x.toFixed(1)} ${T.y.toFixed(1)}Z" style="fill:var(--cos-soft);fill-opacity:.55;stroke:none"/>`;
+    o+=ln(P.x,P.y,Q.x,Q.y,'var(--cos)',6)+ln(Q.x,Q.y,T.x,T.y,'var(--sen)',6)+ln(P.x,P.y,T.x,T.y,'var(--ink)',6);
+    o+=pth(`M${(Q.x-16).toFixed(1)} ${Q.y} v-16 h16`,'none','var(--ink)',2);
+    o+=pth(`M${P.x} ${P.y} L${P.x+44} ${P.y} A44 44 0 0 0 ${(P.x+44*c).toFixed(1)} ${(P.y-44*s).toFixed(1)}Z`,'var(--hi-soft)','var(--hi)',2);
+    o+=tx(P.x+64,P.y-8,'θ','var(--ink)',22,'font-style:italic');
+    const hx=mx+nx*20,hy=my+ny*20;
+    o+=tx(hx,hy,'hipotenusa','var(--ink)',17,'',`text-anchor="middle" transform="rotate(${ang.toFixed(1)} ${hx.toFixed(1)} ${hy.toFixed(1)})"`);
+    o+=tx(Q.x+12,(Q.y+T.y)/2+6,'cateto oposto','var(--sen)',17);
+    o+=tx((P.x+Q.x)/2,P.y+30,'cateto adjacente','var(--cos)',17,'','text-anchor="middle"');
+    o+=bar(84,'sen θ',s,1,'var(--sen)','oposto ÷ hipotenusa');
+    o+=bar(164,'cos θ',c,1,'var(--cos)','adjacente ÷ hipotenusa');
+    o+=bar(244,'tg θ',s/c,4,'var(--tg)','oposto ÷ adjacente');
+    o+=tx(428,40,n(th,0)+'°','var(--ink)',26,'font-weight:800');
+    o+=circ(T.x,T.y,14,'var(--hi)','var(--ink)',3,touched?'':'class="handle"');
+    o+=`<circle cx="${T.x.toFixed(1)}" cy="${T.y.toFixed(1)}" r="32" style="fill:transparent"/>`;
+    svg.innerHTML=o;
+  }
+  drag(svg,{start:p=>p.x<410,move:p=>{touched=true;th=clamp(deg(Math.atan2(P.y-p.y,p.x-P.x)),6,78);draw()}});
+  draw();
+  tween(1500,p=>{if(!touched){th=6+28*ease(p);draw()}});
+}
+
+/* ---------- módulo 1 ---------- */
+function m1(){
+  $('#lab-m1').innerHTML=shell('m1svg',{title:'Prancheta 1: quem é quem no triângulo',label:'Triângulo retângulo ABC com o ângulo reto em C',
+    acts:`<button class="btn sm" id="m1A" type="button" aria-pressed="true">Referência em A</button><button class="btn sm" id="m1B" type="button" aria-pressed="false">Referência em B</button><button class="btn sm" id="m1Ch" type="button" aria-pressed="false">Modo desafio</button>`,
+    after:`<p class="prompt" id="m1Prompt" aria-live="polite">Escolha a referência e observe os nomes dos lados.</p>`});
+  const svg=$('#m1svg');
+  const A={x:90,y:290},B={x:440,y:80},C={x:440,y:290};
+  const NAME={hyp:'hipotenusa',opp:'cateto oposto',adj:'cateto adjacente'};
+  const ART={hyp:'na hipotenusa',opp:'no cateto oposto',adj:'no cateto adjacente'};
+  const COL={hyp:'var(--ink)',opp:'var(--sen)',adj:'var(--cos)'};
+  const seg={AB:[A,B],BC:[B,C],AC:[A,C]};
+  svg.innerHTML=`<path id="m1sec" style="fill:var(--hi-soft);stroke:var(--hi);stroke-width:2"/>`
+    +['AB','BC','AC'].map(k=>`<line id="m1${k}" class="side" x1="${seg[k][0].x}" y1="${seg[k][0].y}" x2="${seg[k][1].x}" y2="${seg[k][1].y}"/>`).join('')
+    +`<path d="M${C.x-18} ${C.y} v-18 h18" style="fill:none;stroke:var(--ink);stroke-width:2"/>`
+    +`<text id="m1tAB" class="lbl" text-anchor="middle"></text><text id="m1tBC" class="lbl" x="${C.x+16}" y="${(B.y+C.y)/2+6}"></text><text id="m1tAC" class="lbl" text-anchor="middle" x="${(A.x+C.x)/2}" y="${C.y+34}"></text>`
+    +tx(A.x-28,A.y+8,'A','var(--ink)',26,'font-weight:800')+tx(B.x+12,B.y-8,'B','var(--ink)',26,'font-weight:800')+tx(C.x+12,C.y-8,'C','var(--ink)',26,'font-weight:800')
+    +`<text id="m1th" class="lbl" text-anchor="middle" style="fill:var(--ink);font-style:italic">θ</text>`
+    +['AB','BC','AC'].map(k=>`<line class="hit" data-k="${k}" x1="${seg[k][0].x}" y1="${seg[k][0].y}" x2="${seg[k][1].x}" y2="${seg[k][1].y}"/>`).join('');
+  const ang=deg(Math.atan2(B.y-A.y,B.x-A.x)),mx=(A.x+B.x)/2,my=(A.y+B.y)/2;
+  const tAB=$('#m1tAB'),ox=mx-0.515*26,oy=my-0.858*26;
+  tAB.setAttribute('x',ox.toFixed(1));tAB.setAttribute('y',oy.toFixed(1));tAB.setAttribute('transform',`rotate(${ang.toFixed(1)} ${ox.toFixed(1)} ${oy.toFixed(1)})`);
+  let ref='A',mode='explore',target=null,streak=0,lock=false;
+  const role=k=>k==='AB'?'hyp':(ref==='A'?(k==='BC'?'opp':'adj'):(k==='AC'?'opp':'adj'));
+  function apply(reveal){
+    const show=mode==='explore'||reveal;
+    ['AB','BC','AC'].forEach(k=>{
+      const r=role(k),l=$('#m1'+k),t=$('#m1t'+k);
+      l.style.stroke=show?COL[r]:'var(--line)';
+      t.textContent=NAME[r];t.style.fill=COL[r];t.style.opacity=show?1:0;
+    });
+    const V=ref==='A'?A:B,U=ref==='A'?B:A;
+    const a=arcD(V,U,C,44);
+    $('#m1sec').setAttribute('d',a.sector);
+    const th=$('#m1th');
+    th.setAttribute('x',(V.x+66*Math.cos(a.mid)).toFixed(1));th.setAttribute('y',(V.y+66*Math.sin(a.mid)+7).toFixed(1));
+  }
+  const setPress=()=>{$('#m1A').setAttribute('aria-pressed',String(ref==='A'&&mode==='explore'));$('#m1B').setAttribute('aria-pressed',String(ref==='B'&&mode==='explore'));$('#m1Ch').setAttribute('aria-pressed',String(mode==='challenge'))};
+  const say=t=>{$('#m1Prompt').textContent=t};
+  function newQ(){
+    ref=Math.random()<.5?'A':'B';target=pick(['hyp','opp','adj']);lock=false;
+    apply(false);setPress();
+    say(`O ângulo marcado está no vértice ${ref}. Toque ${ART[target]}. Sequência: ${streak}`);
+  }
+  $('#m1A').addEventListener('click',()=>{mode='explore';svg.classList.remove('chal');ref='A';apply(true);setPress();say('Referência em A: o oposto é BC e o adjacente é AC.')});
+  $('#m1B').addEventListener('click',()=>{mode='explore';svg.classList.remove('chal');ref='B';apply(true);setPress();say('Referência em B: o oposto é AC e o adjacente é BC.')});
+  $('#m1Ch').addEventListener('click',()=>{
+    if(mode==='challenge'){mode='explore';svg.classList.remove('chal');apply(true);setPress();say('Modo explorar. Escolha a referência e observe os nomes.');return}
+    mode='challenge';streak=0;svg.classList.add('chal');newQ();
+  });
+  $$('.hit',svg).forEach(h=>h.addEventListener('click',()=>{
+    if(mode!=='challenge'||lock)return;
+    const r=role(h.dataset.k);
+    if(r===target){
+      streak++;lock=true;apply(true);
+      say(`Isso mesmo. Sequência: ${streak}`);
+      if(streak>=3)markDone('m1');
+      setTimeout(()=>{if(mode==='challenge')newQ()},1100);
+    }else{
+      streak=0;svg.classList.remove('shake');void svg.getBoundingClientRect();svg.classList.add('shake');
+      say(`Esse lado é ${NAME[r]}. Tente de novo: toque ${ART[target]}.`);
+    }
+  }));
+  apply(true);
+}
+
+/* ---------- módulo 2 ---------- */
+function m2(){
+  $('#lab-m2').innerHTML=shell('m2svg',{title:'Prancheta 2: três triângulos com o mesmo ângulo',label:'Três triângulos retângulos semelhantes com a mesma abertura',
+    controls:fld('m2a','Ângulo θ',10,80,1,35,'°')+fld('m2k','Esticar os triângulos',0.5,1.2,0.05,1,'×'),
+    after:`<div class="tblwrap"><table class="tbl" id="m2tb"></table></div>`});
+  const svg=$('#m2svg'),tb=$('#m2tb');
+  let th=35,k=1;
+  function draw(){
+    const t=rad(th),u=34,P={x:40,y:300},hs=[2,4,6].map(h=>h*k);
+    const cols=['var(--sen-soft)','var(--cos-soft)','var(--tg-soft)'];
+    let s='';
+    [2,1,0].forEach(i=>{
+      const h=hs[i]*u,Q={x:P.x+h*Math.cos(t),y:P.y},T={x:Q.x,y:P.y-h*Math.sin(t)};
+      s+=pth(`M${P.x} ${P.y}L${Q.x.toFixed(1)} ${Q.y}L${T.x.toFixed(1)} ${T.y.toFixed(1)}Z`,cols[i],'var(--ink)',2);
+      s+=tx(T.x+8,T.y+6,'h = '+n(hs[i],1),'var(--ink)',17);
+    });
+    const a=arcD(P,{x:P.x+100,y:P.y},{x:P.x+100*Math.cos(t),y:P.y-100*Math.sin(t)},42);
+    s+=pth(a.sector,'var(--hi-soft)','var(--hi)',2)+tx(P.x+52,P.y-8,'θ','var(--ink)',22,'font-style:italic');
+    svg.innerHTML=s;
+    tb.innerHTML=`<thead><tr><th>Triângulo</th><th>Hipotenusa</th><th>Oposto</th><th>Adjacente</th><th class="c-sen">oposto ÷ hip.</th><th class="c-cos">adjac. ÷ hip.</th></tr></thead><tbody>`
+      +hs.map((h,i)=>`<tr><td>${i+1}</td><td>${n(h,2)}</td><td>${n(h*Math.sin(t),2)}</td><td>${n(h*Math.cos(t),2)}</td><td class="hl-sen">${n(Math.sin(t),3)}</td><td class="hl-cos">${n(Math.cos(t),3)}</td></tr>`).join('')+`</tbody>`;
+  }
+  bind('m2a',v=>{th=v;draw()},'°');bind('m2k',v=>{k=v;draw()},'×');
+  draw();
+}
+
+/* ---------- módulo 3 ---------- */
+function m3(){
+  $('#lab-m3').innerHTML=shell('m3svg',{title:'Prancheta 3: a formiguinha na rampa',label:'Rampa com uma formiguinha subindo e as medidas de subida e avanço',
+    acts:`<button class="btn sm" id="m3go" type="button">Andar</button>`,
+    controls:fld('m3a','Inclinação da rampa',15,55,1,30,'°')+fld('m3s','Distância andada',0,10,0.1,4,' m'),
+    readout:''});
+  const svg=$('#m3svg'),rd=$('#m3svg-read');
+  let th=30,s=4,anim=null;
+  function draw(){
+    const t=rad(th),c=Math.cos(t),sn=Math.sin(t),P={x:50,y:300},L=330;
+    const T={x:P.x+L*c,y:P.y-L*sn},Q={x:T.x,y:P.y};
+    const f=s/10,pos={x:P.x+f*L*c,y:P.y-f*L*sn},foot={x:pos.x,y:P.y};
+    let o=ln(20,P.y,580,P.y,'var(--line)',2);
+    o+=pth(`M${P.x} ${P.y}L${Q.x.toFixed(1)} ${Q.y}L${T.x.toFixed(1)} ${T.y.toFixed(1)}Z`,'var(--tg-soft)','none',0);
+    o+=ln(P.x,P.y,T.x,T.y,'var(--ink)',6);
+    o+=ln(P.x,P.y+6,foot.x,foot.y+6,'var(--cos)',6);
+    if(s>0.15)o+=ln(foot.x,foot.y,pos.x,pos.y,'var(--sen)',6,'stroke-dasharray="2 9"');
+    if(s>0.6){
+      o+=tx(foot.x+12,(foot.y+pos.y)/2+6,'subiu','var(--sen)',19);
+      o+=tx((P.x+foot.x)/2,P.y+34,'avançou','var(--cos)',19,'','text-anchor="middle"');
+    }
+    const a=arcD(P,{x:P.x+100,y:P.y},{x:P.x+100*c,y:P.y-100*sn},40);
+    o+=pth(a.sector,'var(--hi-soft)','var(--hi)',2)+tx(P.x+52,P.y-8,'θ','var(--ink)',22,'font-style:italic');
+    const nx=-sn,ny=-c,bx=pos.x+15*nx,by=pos.y+15*ny;
+    o+=circ(bx,by,15,'var(--hi)','var(--ink)',2.5);
+    o+=circ(bx+c*3-4,by-sn*3-4,3.5,'var(--ink)','none',0)+circ(bx+c*3+5,by-sn*3-4,3.5,'var(--ink)','none',0);
+    svg.innerHTML=o;
+    const tgv=sn/c;
+    rd.innerHTML=`<div><small>Andou na rampa</small><b>${n(s,1)} m</b></div>`
+      +`<div><small>Subiu (seno × andou)</small><b class="c-sen">${n(s*sn,2)} m</b></div>`
+      +`<div><small>Avançou (cosseno × andou)</small><b class="c-cos">${n(s*c,2)} m</b></div>`
+      +`<div><small>Subida ÷ avanço (tangente)</small><b class="c-tg">${n(tgv,2)}</b></div>`;
+  }
+  const sl=bind('m3a',v=>{th=v;draw()},'°');
+  const ss=bind('m3s',v=>{s=v;if(anim){anim.stop();anim=null}draw()},' m');
+  $('#m3go').addEventListener('click',()=>{
+    if(anim)anim.stop();
+    s=0;ss.set(0);draw();
+    anim=tween(3200,p=>{s=10*ease(p);ss.set(Math.round(s*10)/10);draw()},()=>{anim=null});
+  });
+  draw();
+}
+
+/* ---------- módulo 4 ---------- */
+function m4(){
+  $('#lab-m4').innerHTML=shell('m4svg',{title:'Prancheta 4: de onde vêm os valores',label:'Construção do triângulo de 30, 60 e 90 graus a partir do equilátero, e do triângulo de 45 graus a partir do quadrado',
+    acts:`<button class="btn sm" id="m4eq" type="button" aria-pressed="true">Triângulo equilátero</button><button class="btn sm" id="m4sq" type="button" aria-pressed="false">Quadrado</button><button class="btn sm" id="m4go" type="button">Cortar ao meio</button>`,
+    after:`<p class="dyn" id="m4cap" aria-live="polite"></p>`});
+  const svg=$('#m4svg'),cap=$('#m4cap');
+  let shape='eq',p=0,anim=null;
+  const sq=(x,y,s,c='var(--ink)')=>pth(`M${x} ${y} h${s} v${s} h${-s}Z`,'none',c,2);
+  function draw(){
+    const op1=clamp(1-p*2,0,1),op2=clamp(p*2-1,0,1);
+    const lab=(x,y,t,o,c='var(--ink)',anchor='middle',rot='')=>o>0.02?tx(x,y,t,c,19,`opacity:${o.toFixed(2)}`,`text-anchor="${anchor}" ${rot}`):'';
+    let o='';
+    if(shape==='eq'){
+      const L={x:120,y:300},R={x:380,y:300},T={x:250,y:300-Math.sqrt(3)*130},M={x:250,y:300};
+      o+=pth(`M${L.x} ${L.y}L${R.x} ${R.y}L${T.x} ${T.y.toFixed(1)}Z`,'var(--cos-soft)','none',0);
+      o+=`<path d="M${L.x} ${L.y}L${M.x} ${M.y}L${T.x} ${T.y.toFixed(1)}Z" style="fill:var(--hi-soft);opacity:${p.toFixed(2)}"/>`;
+      o+=pth(`M${L.x} ${L.y}L${R.x} ${R.y}L${T.x} ${T.y.toFixed(1)}Z`,'none','var(--ink)',4);
+      if(p>0)o+=ln(T.x,T.y,T.x,T.y+(M.y-T.y)*p,'var(--ink)',3,'stroke-dasharray="7 6"');
+      if(p>0.95)o+=pth(`M${M.x-14} ${M.y} v-14 h14`,'none','var(--ink)',2);
+      o+=lab(180,180,'2',op1)+lab(320,180,'2',op1)+lab(250,326,'2',op1)+lab(L.x+48,L.y-10,'60°',op1)+lab(R.x-48,R.y-10,'60°',op1)+lab(T.x,T.y+52,'60°',op1);
+      o+=lab(170,178,'2',op2,'var(--ink)')+lab(185,326,'1',op2,'var(--cos)')+lab(315,326,'1',op2,'var(--cos)')+lab(272,190,'√3',op2,'var(--sen)','start')+lab(L.x+48,L.y-10,'60°',op2)+lab(T.x-2,T.y+62,'30°',op2,'var(--ink)','end');
+    }else{
+      const BL={x:150,y:270},BR={x:350,y:270},TR={x:350,y:70};
+      o+=`<path d="M${BL.x} ${BL.y}h200v-200h-200Z" style="fill:var(--cos-soft)"/>`;
+      o+=`<path d="M${BL.x} ${BL.y}L${BR.x} ${BR.y}L${TR.x} ${TR.y}Z" style="fill:var(--hi-soft);opacity:${p.toFixed(2)}"/>`;
+      o+=sq(150,70,200)+'';
+      if(p>0)o+=ln(BL.x,BL.y,BL.x+(TR.x-BL.x)*p,BL.y+(TR.y-BL.y)*p,'var(--ink)',3,'stroke-dasharray="7 6"');
+      if(p>0.95)o+=pth(`M${BR.x-14} ${BR.y} v-14 h14`,'none','var(--ink)',2);
+      o+=lab(250,296,'1',1,'var(--cos)')+lab(376,175,'1',1,'var(--sen)','start')+lab(138,175,'1',op1,'var(--ink)','end')+lab(250,56,'1',op1,'var(--ink)');
+      o+=lab(226,168,'√2',op2,'var(--ink)','end','')+lab(BL.x+62,BL.y-12,'45°',op2)+lab(TR.x-8,TR.y+56,'45°',op2,'var(--ink)','end');
+    }
+    svg.innerHTML=o;
+    if(p<1){cap.innerHTML=shape==='eq'?'Aperte o botão: o triângulo equilátero de lado 2 será cortado pela altura.':'Aperte o botão: o quadrado de lado 1 será cortado pela diagonal.'}
+    else if(shape==='eq'){cap.innerHTML=`Meio triângulo: hipotenusa 2, cateto oposto a 30° igual a 1 e cateto oposto a 60° igual a √3. Logo sen 30° = ${fr(1,2)}, cos 30° = ${fr('√3',2)}, tg 30° = ${fr(1,'√3')} = ${fr('√3',3)}. Pelo outro ângulo, sen 60° = ${fr('√3',2)}, cos 60° = ${fr(1,2)} e tg 60° = √3.`}
+    else{cap.innerHTML=`Meio quadrado: catetos 1 e 1, hipotenusa √2. Logo sen 45° = ${fr(1,'√2')} = ${fr('√2',2)}, cos 45° = ${fr('√2',2)} e tg 45° = 1.`}
+  }
+  function setShape(s){if(anim)anim.stop();shape=s;p=0;$('#m4eq').setAttribute('aria-pressed',String(s==='eq'));$('#m4sq').setAttribute('aria-pressed',String(s==='sq'));$('#m4go').textContent=s==='eq'?'Cortar ao meio':'Traçar a diagonal';draw()}
+  $('#m4eq').addEventListener('click',()=>setShape('eq'));
+  $('#m4sq').addEventListener('click',()=>setShape('sq'));
+  $('#m4go').addEventListener('click',()=>{if(anim)anim.stop();p=0;anim=tween(1800,q=>{p=ease(q);draw()},()=>{anim=null})});
+  draw();
+
+  /* cartas */
+  const ROWS=[[30,fr(1,2),fr('√3',2),fr('√3',3)],[45,fr('√2',2),fr('√2',2),'1'],[60,fr('√3',2),fr(1,2),'√3']];
+  $('#lab-m4b').innerHTML=`<figure class="lab"><div class="lab-bar"><span>Cartas de valores</span><span class="acts"><button class="btn sm" id="m4all" type="button">Virar todas</button></span></div><div class="tblwrap" style="border-top:0"><table class="tbl"><thead><tr><th>Ângulo</th><th class="c-sen">seno</th><th class="c-cos">cosseno</th><th class="c-tg">tangente</th></tr></thead><tbody>`
+    +ROWS.map(r=>`<tr><td><b>${r[0]}°</b></td>${r.slice(1).map(v=>`<td><button class="cell" type="button" aria-pressed="false"><span class="q">?</span><span class="v">${v}</span></button></td>`).join('')}</tr>`).join('')
+    +`</tbody></table></div></figure>`;
+  $$('#lab-m4b .cell').forEach(b=>b.addEventListener('click',()=>b.setAttribute('aria-pressed',String(b.getAttribute('aria-pressed')!=='true'))));
+  $('#m4all').addEventListener('click',()=>{const cs=$$('#lab-m4b .cell');const all=cs.every(c=>c.getAttribute('aria-pressed')==='true');cs.forEach(c=>c.setAttribute('aria-pressed',String(!all)))});
+
+  /* treino */
+  $('#lab-m4c').innerHTML=`<figure class="lab"><div class="lab-bar"><span>Quanto mede o lado?</span><span class="acts"><span id="m4score">Acertos: 0 de 0</span></span></div><div class="drill"><p id="m4q"></p><div class="opts" id="m4o"></div><p class="fb" id="m4fb" aria-live="polite"></p></div></figure>`;
+  const S={30:.5,45:Math.SQRT1_2,60:Math.sqrt(3)/2},Cc={30:Math.sqrt(3)/2,45:Math.SQRT1_2,60:.5};
+  const KN={hip:'A hipotenusa',opp:'O cateto oposto a esse ângulo',adj:'O cateto adjacente a esse ângulo'};
+  const AK={hip:'a hipotenusa',opp:'o cateto oposto',adj:'o cateto adjacente'};
+  let ok=0,tot=0,cur=null,answered=false;
+  function gen(){
+    const th=pick([30,45,60]),kn=pick(['hip','opp','adj']);let ak;do{ak=pick(['hip','opp','adj'])}while(ak===kn);
+    const val=pick([4,6,8,10,12]),m={hip:1,opp:S[th],adj:Cc[th]};
+    const ans=val/m[kn]*m[ak];
+    const bad=[val*S[th],val*Cc[th],val/S[th],val/Cc[th],val*S[th]/Cc[th],val*Cc[th]/S[th],val*2,val/2,ans*1.5,ans*.75,ans+2];
+    const opts=[ans];
+    shuffle(bad).forEach(b=>{if(opts.length<4&&opts.every(x=>n(x,1)!==n(b,1)))opts.push(b)});
+    const list=shuffle(opts);
+    cur={ans,list,idx:list.indexOf(ans)};answered=false;
+    $('#m4q').textContent=`Num triângulo retângulo, um dos ângulos agudos mede ${th}°. ${KN[kn]} mede ${val}. Quanto mede ${AK[ak]}?`;
+    $('#m4o').innerHTML=list.map((v,i)=>`<button class="opt" type="button" data-i="${i}"><span class="l">${'ABCD'[i]}</span><span>${n(v,1)}</span></button>`).join('');
+    $('#m4fb').textContent='';$('#m4fb').className='fb';
+    $$('#m4o .opt').forEach(b=>b.addEventListener('click',()=>{
+      const i=+b.dataset.i;
+      if(!answered){tot++;answered=true}
+      if(i===cur.idx){
+        b.classList.add('ok');$$('#m4o .opt').forEach(x=>x.disabled=true);
+        if(answered&&!b.dataset.w)ok++;
+        $('#m4fb').className='fb good';$('#m4fb').textContent='Correto.';
+        $('#m4score').textContent=`Acertos: ${ok} de ${tot}`;
+        setTimeout(gen,1100);
+      }else{
+        b.classList.add('no');b.disabled=true;
+        $$('#m4o .opt').forEach(x=>x.dataset.w='1');
+        $('#m4fb').className='fb bad';$('#m4fb').textContent='Não foi dessa vez. Confira qual razão liga os dois lados e tente outra.';
+        $('#m4score').textContent=`Acertos: ${ok} de ${tot}`;
+      }
+    }));
+  }
+  gen();
+}
+
+/* ---------- módulo 5 ---------- */
+function m5(){
+  $('#lab-m5').innerHTML=shell('m5svg',{title:'Prancheta 5: sen² + cos² = 1',label:'Triângulo de hipotenusa 1 e barra que mostra que sen ao quadrado mais cos ao quadrado é sempre 1',
+    controls:fld('m5a','Ângulo θ',5,85,1,40,'°'),readout:''});
+  const svg=$('#m5svg'),rd=$('#m5svg-read');
+  let th=40;
+  function draw(){
+    const t=rad(th),s=Math.sin(t),c=Math.cos(t),H=240,P={x:40,y:300};
+    const Q={x:P.x+H*c,y:P.y},T={x:Q.x,y:P.y-H*s};
+    let o=pth(`M${P.x} ${P.y}L${Q.x.toFixed(1)} ${Q.y}L${T.x.toFixed(1)} ${T.y.toFixed(1)}Z`,'var(--cos-soft)','none',0);
+    o+=ln(P.x,P.y,Q.x,Q.y,'var(--cos)',6)+ln(Q.x,Q.y,T.x,T.y,'var(--sen)',6)+ln(P.x,P.y,T.x,T.y,'var(--ink)',6);
+    o+=pth(`M${(Q.x-14).toFixed(1)} ${Q.y} v-14 h14`,'none','var(--ink)',2);
+    const a=arcD(P,{x:P.x+100,y:P.y},{x:P.x+100*c,y:P.y-100*s},40);
+    o+=pth(a.sector,'var(--hi-soft)','var(--hi)',2)+tx(P.x+52,P.y-8,'θ','var(--ink)',22,'font-style:italic');
+    const b=arcD(T,P,Q,30);
+    o+=pth(b.sector,'var(--tg-soft)','var(--tg)',2)+tx(T.x+50*Math.cos(b.mid)-16,T.y+50*Math.sin(b.mid)+6,'β','var(--tg)',20,'font-style:italic');
+    o+=tx((P.x+T.x)/2-28,(P.y+T.y)/2-10,'1','var(--ink)',20,'','text-anchor="end"');
+    o+=tx(Q.x+10,(Q.y+T.y)/2+6,'sen θ','var(--sen)',18)+tx((P.x+Q.x)/2,P.y+28,'cos θ','var(--cos)',18,'','text-anchor="middle"');
+    const x0=340,w=230;
+    o+=tx(x0,62,'Área total = 1 (a hipotenusa ao quadrado)','var(--ink-2)',15);
+    o+=`<rect x="${x0}" y="76" width="${(w*s*s).toFixed(1)}" height="46" style="fill:var(--sen)"/><rect x="${(x0+w*s*s).toFixed(1)}" y="76" width="${(w*c*c).toFixed(1)}" height="46" style="fill:var(--cos)"/><rect x="${x0}" y="76" width="${w}" height="46" style="fill:none;stroke:var(--ink);stroke-width:3"/>`;
+    o+=tx(x0,156,'sen² θ = '+n(s*s,2),'var(--sen)',20,'font-weight:800');
+    o+=tx(x0,186,'cos² θ = '+n(c*c,2),'var(--cos)',20,'font-weight:800');
+    o+=tx(x0,216,'soma = '+n(s*s+c*c,2),'var(--ink)',20,'font-weight:800');
+    o+=tx(x0,256,'β = 90° − θ = '+n(90-th,0)+'°','var(--tg)',18);
+    o+=tx(x0,282,'sen β = cos θ = '+n(c,2),'var(--tg)',18);
+    o+=tx(x0,308,'cos β = sen θ = '+n(s,2),'var(--tg)',18);
+    svg.innerHTML=o;
+    rd.innerHTML=`<div><small>sen θ</small><b class="c-sen">${n(s,3)}</b></div><div><small>cos θ</small><b class="c-cos">${n(c,3)}</b></div><div><small>tg θ = sen θ ÷ cos θ</small><b class="c-tg">${n(s/c,3)}</b></div>`;
+  }
+  bind('m5a',v=>{th=v;draw()},'°');
+  draw();
+}
+
+/* ---------- módulo 6 ---------- */
+function m6(){
+  $('#lab-m6').innerHTML=shell('m6svg',{title:'Prancheta 6: descubra a altura da torre',vb:'0 0 600 330',label:'Torre com sombra no chão e sol a um ângulo ajustável',
+    acts:`<button class="btn sm" id="m6new" type="button">Nova torre</button>`,
+    controls:fld('m6a','Ângulo do sol',20,65,1,40,'°')
+      +`<span class="acts" style="display:flex;gap:6px"><button class="btn sm" type="button" data-p="30">30°</button><button class="btn sm" type="button" data-p="45">45°</button><button class="btn sm" type="button" data-p="60">60°</button></span>`
+      +`<label class="field"><span>Sua altura em metros</span><input class="inp" id="m6ans" inputmode="decimal" placeholder="ex.: 25,5" autocomplete="off"></label><button class="btn sm primary" id="m6ck" type="button">Conferir</button>`,
+    after:`<p class="dyn" id="m6fb" aria-live="polite">Leia a sombra e o ângulo, calcule a altura e confira.</p>`});
+  const svg=$('#m6svg'),fb=$('#m6fb');
+  let H=rnd(25)+12,th=40,tries=0,shown=false;
+  const g=262,tX=424,tW=26,sc=4;
+  function shadow(){return Math.round(H/Math.tan(rad(th))*10)/10}
+  function draw(){
+    const t=rad(th),sh=shadow(),top=g-H*sc,tip=tX-sh*sc;
+    const sun={x:tX+100*Math.cos(t),y:top-100*Math.sin(t)};
+    let o=ln(10,g,590,g,'var(--ink)',3);
+    o+=ln(tip,g,tX,g,'var(--ink-2)',9);
+    o+=ln(tip,g,sun.x,sun.y,'var(--hi)',3,'stroke-dasharray="8 7"');
+    o+=circ(sun.x,sun.y,22,'var(--hi)','var(--ink)',2.5);
+    o+=`<rect x="${tX}" y="${top}" width="${tW}" height="${H*sc}" style="fill:var(--cos-soft);stroke:var(--ink);stroke-width:3"/>`;
+    o+=tx(tX+tW/2,top-10,shown?`h = ${H} m`:'h = ?','var(--ink)',20,'font-weight:800','text-anchor="middle"');
+    const a=arcD({x:tip,y:g},{x:tip+120,y:g},{x:tip+120*Math.cos(t),y:g-120*Math.sin(t)},44);
+    o+=pth(a.sector,'var(--hi-soft)','var(--hi)',2)+tx(tip+56,g-8,n(th,0)+'°','var(--ink)',19);
+    o+=ln(tip,g+26,tX,g+26,'var(--sen)',3)+ln(tip,g+18,tip,g+34,'var(--sen)',3)+ln(tX,g+18,tX,g+34,'var(--sen)',3);
+    o+=tx((tip+tX)/2,g+56,'sombra = '+n(sh,1)+' m','var(--sen)',20,'font-weight:800','text-anchor="middle"');
+    svg.innerHTML=o;
+  }
+  const sl=bind('m6a',v=>{th=v;shown=false;draw()},'°');
+  $$('.acts [data-p]',$('#lab-m6')).forEach(b=>b.addEventListener('click',()=>{sl.set(+b.dataset.p);th=+b.dataset.p;shown=false;draw()}));
+  $('#m6new').addEventListener('click',()=>{H=rnd(25)+12;tries=0;shown=false;$('#m6ans').value='';fb.className='dyn';fb.textContent='Nova torre! Leia a sombra e o ângulo e calcule a altura.';draw()});
+  $('#m6ck').addEventListener('click',()=>{
+    const v=parseFloat($('#m6ans').value.replace(',','.'));
+    if(isNaN(v)){fb.textContent='Digite um número em metros, por exemplo 25,5.';return}
+    const exp=shadow()*Math.tan(rad(th));
+    if(Math.abs(v-exp)<=0.6){
+      shown=true;draw();markDone('m6');
+      fb.innerHTML=`Correto. altura = sombra × tg θ = ${n(shadow(),1)} × tg ${th}° ≈ ${n(exp,1)} m. A torre tinha ${H} m.`;
+    }else{
+      tries++;
+      fb.innerHTML=tries<2?'Quase. A altura é o cateto oposto ao ângulo do sol e a sombra é o cateto adjacente. Qual razão liga os dois?':`Use tg θ = oposto ÷ adjacente, então altura = sombra × tg θ. Aqui seria ${n(shadow(),1)} × tg ${th}°. Tente de novo.`;
+    }
+  });
+  draw();
+}
+
+/* ---------- módulo 7 ---------- */
+const TAB={0:{s:'0',c:'1',t:'0'},30:{s:'1/2',c:'√3/2',t:'√3/3'},45:{s:'√2/2',c:'√2/2',t:'1'},60:{s:'√3/2',c:'1/2',t:'√3'},90:{s:'1',c:'0',t:null}};
+function exactVals(d){
+  d=((d%360)+360)%360;
+  let r,q;
+  if(d<=90){r=d;q=1}else if(d<=180){r=180-d;q=2}else if(d<=270){r=d-180;q=3}else{r=360-d;q=4}
+  const T=TAB[r];if(!T)return null;
+  const sg=(v,neg)=>v==='0'?'0':(neg?'−':'')+v;
+  return{s:sg(T.s,q>=3),c:sg(T.c,q===2||q===3),t:T.t==null?'não existe':sg(T.t,q===2||q===4)};
+}
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+function piFrac(d){
+  const k=Math.round(d/15);
+  if(k===0)return '0';
+  const g=gcd(k,12),p=k/g,q=12/g;
+  const top=p===1?'π':p+'π';
+  return q===1?top:top+'/'+q;
+}
+const fx=s=>{if(s.indexOf('/')<0)return s;const neg=s.charAt(0)==='−',b=neg?s.slice(1):s,pp=b.split('/');return (neg?'−':'')+fr(pp[0],pp[1])};
+function m7(){
+  const ANG=[0,30,45,60,90,120,135,150,180,210,225,240,270,300,315,330];
+  $('#lab-m7').innerHTML=shell('m7svg',{title:'Prancheta 7: o ponto que gira',vb:'0 0 640 340',drag:true,label:'Ciclo trigonométrico com as projeções de seno e cosseno e o gráfico da função escolhida',
+    acts:`<button class="btn sm" id="m7play" type="button" aria-pressed="false">Girar</button><button class="btn sm" id="m7fn" type="button">Gráfico: seno</button>`,
+    controls:`<label class="chk"><input type="checkbox" id="m7snap" checked> Encaixar de 15° em 15°</label><label class="chk"><input type="checkbox" id="m7rad"> Marcar radianos</label>`,
+    readout:'',
+    after:`<div class="quick" id="m7q">${ANG.map(a=>`<button class="btn sm" type="button" data-a="${a}">${a}°</button>`).join('')}</div>`});
+  const svg=$('#m7svg'),rd=$('#m7svg-read');
+  const cx=170,cy=170,R=120,gx0=380,gw=240;
+  let phi=30,fn='sen',playing=false,last=0,raf=0;
+  const px=t=>gx0+t/(2*Math.PI)*gw;
+  function draw(){
+    const t=rad(phi),c=Math.cos(t),s=Math.sin(t),Px=cx+R*c,Py=cy-R*s;
+    const f=fn==='sen'?Math.sin:Math.cos,col=fn==='sen'?'var(--sen)':'var(--cos)';
+    let o='';
+    o+=ln(cx-R-25,cy,cx+R+25,cy,'var(--line)',2)+ln(cx,cy-R-25,cx,cy+R+25,'var(--line)',2);
+    o+=circ(cx,cy,R,'var(--panel)','var(--ink)',2.5);
+    o+=tx(cx+R*0.62,cy-R*0.62,'I','var(--ink-2)',18,'opacity:.7','text-anchor="middle"')+tx(cx-R*0.62,cy-R*0.62,'II','var(--ink-2)',18,'opacity:.7','text-anchor="middle"')+tx(cx-R*0.62,cy+R*0.62+6,'III','var(--ink-2)',18,'opacity:.7','text-anchor="middle"')+tx(cx+R*0.62,cy+R*0.62+6,'IV','var(--ink-2)',18,'opacity:.7','text-anchor="middle"');
+    if($('#m7rad').checked){
+      o+=pth(`M${cx+R} ${cy} A${R} ${R} 0 0 0 ${(cx+R*Math.cos(1)).toFixed(1)} ${(cy-R*Math.sin(1)).toFixed(1)}`,'none','var(--hi)',8);
+      for(let k=1;k<=6;k++){o+=circ(cx+R*Math.cos(k),cy-R*Math.sin(k),4.5,'var(--hi)','var(--ink)',1.5)+tx(cx+(R+17)*Math.cos(k)-4,cy-(R+17)*Math.sin(k)+5,String(k),'var(--ink-2)',15)}
+      o+=tx(cx+R-6,cy+22,'1 rad','var(--ink-2)',14,'','text-anchor="start"');
+    }
+    if(phi>0.5){const ar=34;o+=pth(`M${cx+ar} ${cy} A${ar} ${ar} 0 ${phi>180?1:0} 0 ${(cx+ar*c).toFixed(1)} ${(cy-ar*s).toFixed(1)}`,'none','var(--hi)',5)}
+    o+=ln(cx,cy,Px,cy,'var(--cos)',5)+ln(Px,cy,Px,Py,'var(--sen)',5)+ln(cx,cy,Px,Py,'var(--ink)',3);
+    o+=circ(Px,Py,10,'var(--hi)','var(--ink)',2.5);
+    // gráfico
+    o+=ln(gx0,cy,gx0+gw+10,cy,'var(--line)',2)+ln(gx0,cy-R-14,gx0,cy+R+14,'var(--line)',2);
+    [[.5,'π/2'],[1,'π'],[1.5,'3π/2'],[2,'2π']].forEach(([k,l])=>{const x=gx0+k/2*gw;o+=ln(x,cy-5,x,cy+5,'var(--ink-2)',2)+tx(x,cy+24,l,'var(--ink-2)',15,'','text-anchor="middle"')});
+    o+=tx(gx0-8,cy-R+6,'1','var(--ink-2)',15,'','text-anchor="end"')+tx(gx0-8,cy+R+6,'−1','var(--ink-2)',15,'','text-anchor="end"');
+    let g='';for(let a=0;a<=360;a+=4){g+=(a?'L':'M')+px(rad(a)).toFixed(1)+' '+(cy-R*f(rad(a))).toFixed(1)}
+    o+=pth(g,'none','var(--line)',2,'stroke-dasharray="4 5"');
+    let d='';const st=Math.max(2,Math.floor(phi/2));for(let i=0;i<=st;i++){const a=t*i/st;d+=(i?'L':'M')+px(a).toFixed(1)+' '+(cy-R*f(a)).toFixed(1)}
+    o+=pth(d,'none',col,4.5);
+    const gxp=px(t),gyp=cy-R*f(t);
+    if(fn==='sen')o+=ln(Px,Py,gxp,gyp,'var(--sen)',2,'stroke-dasharray="5 5"');
+    o+=circ(gxp,gyp,8,col,'var(--ink)',2.5);
+    o+=tx(gx0+8,30,fn==='sen'?'y = sen θ':'y = cos θ',col,20,'font-weight:800');
+    svg.innerHTML=o;
+    // leituras
+    const di=Math.round(phi),isInt=Math.abs(phi-di)<1e-6,ex=isInt?exactVals(di):null;
+    const rs=isInt&&di%15===0?piFrac(di):null;
+    const q=Math.floor(((phi%360)+360)%360/90);
+    const QT=['1º quadrante: tudo positivo','2º quadrante: só o seno é positivo','3º quadrante: só a tangente é positiva','4º quadrante: só o cosseno é positivo'];
+    const tg=Math.abs(c)<1e-9?null:s/c;
+    rd.innerHTML=`<div><small>Ângulo</small><b>${n(phi,isInt?0:1)}° = ${rs?fx(rs):n(t,2)+' rad'}</b></div>`
+      +`<div><small>sen θ</small><b class="c-sen">${ex?fx(ex.s):n(s,3)}</b></div>`
+      +`<div><small>cos θ</small><b class="c-cos">${ex?fx(ex.c):n(c,3)}</b></div>`
+      +`<div><small>tg θ</small><b class="c-tg">${ex?fx(ex.t):(tg==null?'não existe':n(tg,3))}</b></div>`
+      +`<div style="grid-column:1/-1"><small>${QT[q]}</small></div>`;
+  }
+  const stop=()=>{playing=false;cancelAnimationFrame(raf);$('#m7play').setAttribute('aria-pressed','false')};
+  function loop(ts){if(!playing)return;const dt=(ts-last)/1000;last=ts;phi=(phi+50*dt)%360;draw();raf=requestAnimationFrame(loop)}
+  $('#m7play').addEventListener('click',()=>{
+    if(reduce){phi=(Math.round(phi/15)*15+15)%360;draw();return}
+    if(playing){stop();return}
+    playing=true;$('#m7play').setAttribute('aria-pressed','true');last=performance.now();raf=requestAnimationFrame(loop);
+  });
+  $('#m7fn').addEventListener('click',()=>{fn=fn==='sen'?'cos':'sen';$('#m7fn').textContent='Gráfico: '+(fn==='sen'?'seno':'cosseno');draw()});
+  $('#m7rad').addEventListener('change',draw);
+  $$('#m7q button').forEach(b=>b.addEventListener('click',()=>{stop();phi=+b.dataset.a;draw()}));
+  drag(svg,{start:p=>p.x<340,move:p=>{
+    stop();
+    let a=deg(Math.atan2(cy-p.y,p.x-cx));if(a<0)a+=360;
+    if($('#m7snap').checked)a=(Math.round(a/15)*15)%360;
+    phi=a;draw();
+  }});
+  draw();
+}
+
+/* ---------- módulo 8 ---------- */
+function m8(){
+  $('#lab-m8').innerHTML=shell('m8svg',{title:'Prancheta 8: triângulo dentro da circunferência',vb:'0 0 420 340',narrow:true,label:'Triângulo ABC inscrito em uma circunferência de raio R',
+    controls:fld('m8A','Ângulo A',20,120,1,50,'°')+fld('m8B','Ângulo B',20,120,1,60,'°')+fld('m8R','Raio R',3,8,0.5,5,''),
+    readout:'',after:`<p class="dyn" id="m8dyn"></p>`});
+  const svg=$('#m8svg'),rd=$('#m8svg-read'),dyn=$('#m8dyn');
+  let A=50,B=60,R=5;
+  function draw(){
+    const C=180-A-B,r=R*16,O={x:210,y:170};
+    const pos=t=>({x:O.x+r*Math.cos(rad(t)),y:O.y-r*Math.sin(rad(t))});
+    const PB=pos(270-A),PC=pos(270+A),PA=pos(270+A+2*B);
+    const sA=Math.sin(rad(A)),sB=Math.sin(rad(B)),sC=Math.sin(rad(C));
+    const a=2*R*sA,b=2*R*sB,c=2*R*sC;
+    const G={x:(PA.x+PB.x+PC.x)/3,y:(PA.y+PB.y+PC.y)/3};
+    const outv=(P,d)=>({x:P.x+(P.x-O.x)/r*d,y:P.y+(P.y-O.y)/r*d});
+    const mid=(P,Q)=>({x:(P.x+Q.x)/2,y:(P.y+Q.y)/2});
+    const outs=(M,d)=>{const dx=M.x-G.x,dy=M.y-G.y,l=Math.hypot(dx,dy)||1;return{x:M.x+dx/l*d,y:M.y+dy/l*d}};
+    let o=circ(O.x,O.y,r,'none','var(--line)',2,'stroke-dasharray="6 6"')+circ(O.x,O.y,3,'var(--ink-2)','none',0);
+    o+=pth(`M${PA.x.toFixed(1)} ${PA.y.toFixed(1)}L${PB.x.toFixed(1)} ${PB.y.toFixed(1)}L${PC.x.toFixed(1)} ${PC.y.toFixed(1)}Z`,'var(--panel)','none',0);
+    o+=ln(PB.x,PB.y,PC.x,PC.y,'var(--sen)',5)+ln(PC.x,PC.y,PA.x,PA.y,'var(--cos)',5)+ln(PA.x,PA.y,PB.x,PB.y,'var(--tg)',5);
+    const V=[[PA,PB,PC,A,'A','var(--sen)'],[PB,PC,PA,B,'B','var(--cos)'],[PC,PA,PB,C,'C','var(--tg)']];
+    V.forEach(([P,U,W,ang,nm,col])=>{
+      const ar=arcD(P,U,W,24);
+      o+=pth(ar.d,'none',col,3)+tx(P.x+46*Math.cos(ar.mid),P.y+46*Math.sin(ar.mid)+5,ang+'°',col,15,'','text-anchor="middle"');
+      const q=outv(P,20);o+=tx(q.x,q.y+7,nm,'var(--ink)',22,'font-weight:800','text-anchor="middle"');
+    });
+    [[PB,PC,'a',a,'var(--sen)'],[PC,PA,'b',b,'var(--cos)'],[PA,PB,'c',c,'var(--tg)']].forEach(([P,Q,nm,v,col])=>{
+      const p=outs(mid(P,Q),22);o+=tx(p.x,p.y+5,`${nm} = ${n(v,1)}`,col,16,'font-weight:700','text-anchor="middle"');
+    });
+    svg.innerHTML=o;
+    rd.innerHTML=`<div><small>a ÷ sen A</small><b class="c-sen">${n(a/sA,2)}</b></div><div><small>b ÷ sen B</small><b class="c-cos">${n(b/sB,2)}</b></div><div><small>c ÷ sen C</small><b class="c-tg">${n(c/sC,2)}</b></div><div><small>Diâmetro 2R</small><b>${n(2*R,2)}</b></div>`;
+    dyn.innerHTML=`Na prática: se você conhece a = ${n(a,2)}, A = ${A}° e B = ${B}°, o lado b sai de <var>b = a · sen B ÷ sen A</var> = ${n(a,2)} · ${n(sB,3)} ÷ ${n(sA,3)} = ${n(b,2)}. O terceiro ângulo é C = 180° − ${A}° − ${B}° = ${C}°.`;
+  }
+  const sa=bind('m8A',v=>{A=v;if(A+B>160){B=160-A;sb.set(B)}draw()},'°');
+  const sb=bind('m8B',v=>{B=v;if(A+B>160){A=160-B;sa.set(A)}draw()},'°');
+  bind('m8R',v=>{R=v;draw()},'');
+  draw();
+}
+
+/* ---------- módulo 9 ---------- */
+function m9(){
+  $('#lab-m9').innerHTML=shell('m9svg',{title:'Prancheta 9: a dobradiça',vb:'0 0 640 340',label:'Dois lados presos em um vértice formando um ângulo gama e o terceiro lado entre as pontas',
+    acts:`<button class="btn sm" id="m9go" type="button" aria-pressed="false">Abrir e fechar</button>`,
+    controls:fld('m9g','Ângulo γ',5,175,1,60,'°')+fld('m9a','Lado a',2,8,0.5,5,'')+fld('m9b','Lado b',2,8,0.5,6,''),
+    readout:'',after:`<p class="dyn" id="m9dyn" aria-live="polite"></p>`});
+  const svg=$('#m9svg'),rd=$('#m9svg-read'),dyn=$('#m9dyn');
+  let g=60,a=5,b=6,dir=1,playing=false,raf=0,last=0;
+  function draw(){
+    const t=rad(g),u=30,C={x:250,y:290};
+    const A={x:C.x+b*u,y:C.y},B={x:C.x+a*u*Math.cos(t),y:C.y-a*u*Math.sin(t)};
+    const B90={x:C.x,y:C.y-a*u};
+    const c2=a*a+b*b-2*a*b*Math.cos(t),cc=Math.sqrt(c2),py=Math.sqrt(a*a+b*b);
+    let o=ln(C.x,C.y,B90.x,B90.y,'var(--line)',2,'stroke-dasharray="6 6"')+ln(A.x,A.y,B90.x,B90.y,'var(--line)',2,'stroke-dasharray="6 6"');
+    o+=tx((A.x+B90.x)/2+10,(A.y+B90.y)/2-6,'Pitágoras: '+n(py,2),'var(--ink-2)',15,'','text-anchor="start"');
+    o+=pth(`M${C.x} ${C.y}L${A.x.toFixed(1)} ${A.y.toFixed(1)}L${B.x.toFixed(1)} ${B.y.toFixed(1)}Z`,'var(--tg-soft)','none',0);
+    o+=ln(C.x,C.y,B.x,B.y,'var(--sen)',6)+ln(C.x,C.y,A.x,A.y,'var(--cos)',6)+ln(A.x,A.y,B.x,B.y,'var(--tg)',6);
+    const ar=arcD(C,A,B,40);
+    o+=pth(ar.sector,'var(--hi-soft)','var(--hi)',2)+tx(C.x+64*Math.cos(ar.mid),C.y+64*Math.sin(ar.mid)+7,'γ','var(--ink)',22,'font-style:italic','text-anchor="middle"');
+    o+=circ(C.x,C.y,8,'var(--panel)','var(--ink)',3);
+    o+=tx((C.x+A.x)/2,C.y+30,'b = '+n(b,1),'var(--cos)',19,'font-weight:800','text-anchor="middle"');
+    const mx=(C.x+B.x)/2,my=(C.y+B.y)/2;
+    o+=tx(mx-14,my-8,'a = '+n(a,1),'var(--sen)',19,'font-weight:800','text-anchor="end"');
+    o+=tx((A.x+B.x)/2+14,(A.y+B.y)/2-6,'c = '+n(cc,2),'var(--tg)',19,'font-weight:800','text-anchor="start"');
+    o+=tx(C.x-10,C.y+26,'C','var(--ink)',22,'font-weight:800','text-anchor="end"')+tx(A.x+10,A.y+8,'A','var(--ink)',22,'font-weight:800')+tx(B.x-4,B.y-14,'B','var(--ink)',22,'font-weight:800','text-anchor="middle"');
+    svg.innerHTML=o;
+    const corr=-2*a*b*Math.cos(t);
+    rd.innerHTML=`<div><small>a² + b²</small><b>${n(a*a+b*b,2)}</b></div><div><small>Correção −2ab · cos γ</small><b class="${corr<0?'c-sen':'c-cos'}">${n(corr,2)}</b></div><div><small>c²</small><b class="c-tg">${n(c2,2)}</b></div><div><small>c</small><b class="c-tg">${n(cc,2)}</b></div>`;
+    dyn.textContent=Math.abs(g-90)<0.5?'Com 90° o cosseno vale zero, a correção some e sobra c² = a² + b², o teorema de Pitágoras.'
+      :g<90?`Ângulo agudo: cos γ é positivo, a correção é negativa e c fica menor que o valor de Pitágoras, ${n(py,2)}.`
+      :`Ângulo obtuso: cos γ é negativo, a correção passa a somar e c fica maior que o valor de Pitágoras, ${n(py,2)}.`;
+  }
+  const stop=()=>{playing=false;cancelAnimationFrame(raf);$('#m9go').setAttribute('aria-pressed','false')};
+  const sg=bind('m9g',v=>{stop();g=v;draw()},'°');
+  bind('m9a',v=>{a=v;draw()},'');bind('m9b',v=>{b=v;draw()},'');
+  function loop(ts){
+    if(!playing)return;
+    const dt=(ts-last)/1000;last=ts;
+    g+=dir*35*dt;
+    if(g>=160){g=160;dir=-1}else if(g<=20){g=20;dir=1}
+    sg.set(Math.round(g));draw();raf=requestAnimationFrame(loop);
+  }
+  $('#m9go').addEventListener('click',()=>{
+    if(reduce){g=g>=150?20:g+30;sg.set(g);draw();return}
+    if(playing){stop();return}
+    playing=true;$('#m9go').setAttribute('aria-pressed','true');last=performance.now();raf=requestAnimationFrame(loop);
+  });
+  draw();
+}
+
+/* ---------- módulo 10 ---------- */
+function m10(){
+  $('#lab-m10').innerHTML=shell('m10svg',{title:'Jogo: qual lei resolve?',vb:'0 0 420 280',narrow:true,label:'Triângulo com as partes conhecidas em destaque e a parte procurada marcada com interrogação',
+    acts:`<span id="m10sc">Sequência: 0</span>`,
+    after:`<p class="dyn" id="m10q" aria-live="polite"></p><div class="quick" id="m10b"><button class="btn sm" type="button" data-r="sen">Lei dos senos</button><button class="btn sm" type="button" data-r="cos">Lei dos cossenos</button><button class="btn sm" type="button" data-r="ret">Nenhuma, é triângulo retângulo</button></div><p class="dyn" id="m10fb" aria-live="polite"></p>`});
+  const svg=$('#m10svg');
+  const PT={A:{x:50,y:225},B:{x:350,y:245},C:{x:205,y:40}};
+  const RT={A:{x:50,y:245},B:{x:340,y:245},C:{x:340,y:50}};
+  const SC=[
+    {k:['A','B','a'],ask:'b',ans:'sen',why:'Você tem o par a e A completo, e o lado procurado b está oposto ao ângulo B, que também é conhecido.'},
+    {k:['b','c','C'],ask:'B',ans:'sen',why:'O par c e C está completo e o lado b, oposto ao ângulo procurado, é conhecido.'},
+    {k:['b','c','A'],ask:'a',ans:'cos',why:'Dois lados e o ângulo entre eles: é o caso típico da lei dos cossenos.'},
+    {k:['a','b','c'],ask:'C',ans:'cos',why:'Com os três lados não existe par lado e ângulo. Use cos C = (a² + b² − c²) ÷ (2ab).'},
+    {k:['A','b'],ask:'a',ans:'ret',right:true,why:'O triângulo é retângulo em B. Com a hipotenusa b e o ângulo A, o cateto oposto sai de sen A = a ÷ b.'},
+    {k:['B','C','a'],ask:'c',ans:'sen',why:'Com dois ângulos, o terceiro sai de 180° − B − C. Aí o par a e A fica completo e a lei dos senos resolve.'},
+    {k:['a','c','B'],ask:'b',ans:'cos',why:'O ângulo B fica entre os lados a e c. Dois lados e o ângulo entre eles pedem a lei dos cossenos.'},
+    {k:['a','b','A'],ask:'B',ans:'sen',why:'O par a e A está completo e o lado b é conhecido, então a lei dos senos dá sen B.'},
+    {k:['a','b','c'],ask:'A',ans:'cos',why:'Os três lados sem nenhum ângulo pedem a lei dos cossenos: cos A = (b² + c² − a²) ÷ (2bc).'},
+    {k:['a','A','C'],ask:'c',ans:'sen',why:'Dois ângulos dão o terceiro, então o par a e A fica completo e a lei dos senos acha c.'}
+  ];
+  const nm=x=>x===x.toUpperCase()?'ângulo '+x:'lado '+x;
+  let cur=null,streak=0,lock=false,prev=-1;
+  function drawSc(s){
+    const P=s.right?RT:PT,A=P.A,B=P.B,C=P.C;
+    const G={x:(A.x+B.x+C.x)/3,y:(A.y+B.y+C.y)/3};
+    const outs=(M,d)=>{const dx=M.x-G.x,dy=M.y-G.y,l=Math.hypot(dx,dy)||1;return{x:M.x+dx/l*d,y:M.y+dy/l*d}};
+    let o=pth(`M${A.x} ${A.y}L${B.x} ${B.y}L${C.x} ${C.y}Z`,'var(--cos-soft)','none',0);
+    const sides={a:[B,C],b:[C,A],c:[A,B]};
+    Object.keys(sides).forEach(k=>{
+      const [P1,P2]=sides[k],kn=s.k.includes(k),as=s.ask===k;
+      o+=ln(P1.x,P1.y,P2.x,P2.y,as?'var(--sen)':(kn?'var(--ink)':'var(--line)'),kn||as?7:3);
+      if(kn||as){const m=outs({x:(P1.x+P2.x)/2,y:(P1.y+P2.y)/2},20);o+=tx(m.x,m.y+7,as?'?':k,as?'var(--sen)':'var(--ink)',24,'font-weight:800','text-anchor="middle"')}
+    });
+    const angs={A:[A,B,C],B:[B,C,A],C:[C,A,B]};
+    Object.keys(angs).forEach(k=>{
+      const [V,U,W]=angs[k],kn=s.k.includes(k),as=s.ask===k;
+      if(!(kn||as))return;
+      const ar=arcD(V,U,W,30);
+      o+=pth(ar.d,'none',as?'var(--sen)':'var(--ink)',4)+tx(V.x+52*Math.cos(ar.mid),V.y+52*Math.sin(ar.mid)+8,as?'?':k,as?'var(--sen)':'var(--ink)',24,'font-weight:800','text-anchor="middle"');
+    });
+    if(s.right){const u1={x:(A.x-B.x),y:(A.y-B.y)},u2={x:(C.x-B.x),y:(C.y-B.y)},l1=Math.hypot(u1.x,u1.y),l2=Math.hypot(u2.x,u2.y);
+      const p1={x:B.x+u1.x/l1*16,y:B.y+u1.y/l1*16},p2={x:B.x+u2.x/l2*16,y:B.y+u2.y/l2*16};
+      o+=pth(`M${p1.x.toFixed(1)} ${p1.y.toFixed(1)} L${(p1.x+p2.x-B.x).toFixed(1)} ${(p1.y+p2.y-B.y).toFixed(1)} L${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`,'none','var(--ink)',2)}
+    o+=tx(A.x-22,A.y+8,'A','var(--ink-2)',18)+tx(B.x+10,B.y+8,'B','var(--ink-2)',18)+tx(C.x,C.y-10,'C','var(--ink-2)',18,'','text-anchor="middle"');
+    svg.innerHTML=o;
+  }
+  function next(){
+    let i;do{i=rnd(SC.length)}while(i===prev);prev=i;cur=SC[i];lock=false;
+    drawSc(cur);
+    $('#m10q').textContent=`Conhecidos: ${cur.k.map(nm).join(', ')}. Procurado: ${nm(cur.ask)}.${cur.right?' O triângulo tem ângulo reto em B.':''} Qual ferramenta resolve?`;
+    $('#m10fb').textContent='';
+  }
+  $$('#m10b button').forEach(b=>b.addEventListener('click',()=>{
+    if(lock)return;
+    const fbEl=$('#m10fb');
+    if(b.dataset.r===cur.ans){
+      streak++;lock=true;fbEl.textContent='Certo. '+cur.why;
+      if(streak>=3)markDone('m10');
+      $('#m10sc').textContent='Sequência: '+streak;
+      setTimeout(next,2600);
+    }else{
+      streak=0;$('#m10sc').textContent='Sequência: 0';
+      fbEl.textContent='Não é essa. Veja o que está marcado na figura: '+cur.why;lock=true;
+      setTimeout(next,3200);
+    }
+  }));
+  next();
+}
+
+/* ---------- módulo 11: figuras ---------- */
+function outsFrom(G,M,d){const dx=M.x-G.x,dy=M.y-G.y,l=Math.hypot(dx,dy)||1;return{x:M.x+dx/l*d,y:M.y+dy/l*d}}
+function rightMark(V,P,Q,s=14){
+  const l1=Math.hypot(P.x-V.x,P.y-V.y),l2=Math.hypot(Q.x-V.x,Q.y-V.y);
+  const a={x:V.x+(P.x-V.x)/l1*s,y:V.y+(P.y-V.y)/l1*s},b={x:V.x+(Q.x-V.x)/l2*s,y:V.y+(Q.y-V.y)/l2*s};
+  return pth(`M${a.x.toFixed(1)} ${a.y.toFixed(1)} L${(a.x+b.x-V.x).toFixed(1)} ${(a.y+b.y-V.y).toFixed(1)} L${b.x.toFixed(1)} ${b.y.toFixed(1)}`,'none','var(--ink)',2);
+}
+function figTri(o){
+  const w=300,h=190,pad=40,{a,b,c}=o;
+  const cv=(b*b+c*c-a*a)/(2*b*c),sv=Math.sqrt(Math.max(0,1-cv*cv));
+  const P=[{x:0,y:0},{x:c,y:0},{x:b*cv,y:b*sv}];
+  const xs=P.map(p=>p.x),minx=Math.min(...xs),maxx=Math.max(...xs),maxy=Math.max(...P.map(p=>p.y));
+  const sc=Math.min((w-2*pad)/(maxx-minx),(h-2*pad)/maxy),ox=(w-(maxx-minx)*sc)/2;
+  const Q=P.map(p=>({x:ox+(p.x-minx)*sc,y:h-pad-p.y*sc}));
+  const G={x:(Q[0].x+Q[1].x+Q[2].x)/3,y:(Q[0].y+Q[1].y+Q[2].y)/3};
+  let s=pth(`M${Q[0].x.toFixed(1)} ${Q[0].y.toFixed(1)}L${Q[1].x.toFixed(1)} ${Q[1].y.toFixed(1)}L${Q[2].x.toFixed(1)} ${Q[2].y.toFixed(1)}Z`,'var(--cos-soft)','var(--ink)',2.5);
+  (o.names||[]).forEach((nm,i)=>{const p=outsFrom(G,Q[i],16);s+=tx(p.x,p.y+6,nm,'var(--ink)',17,'font-weight:800','text-anchor="middle"')});
+  [[1,2,o.la],[0,2,o.lb],[0,1,o.lc]].forEach(([i,j,l])=>{if(l){const p=outsFrom(G,{x:(Q[i].x+Q[j].x)/2,y:(Q[i].y+Q[j].y)/2},16);s+=tx(p.x,p.y+5,l,'var(--sen)',15,'','text-anchor="middle"')}});
+  if(o.angle){const i=o.angle.v,ar=arcD(Q[i],Q[(i+1)%3],Q[(i+2)%3],20);s+=pth(ar.d,'none','var(--hi)',3.5)+tx(Q[i].x+38*Math.cos(ar.mid),Q[i].y+38*Math.sin(ar.mid)+5,o.angle.label,'var(--ink)',14,'','text-anchor="middle"')}
+  if(o.right!=null){const i=o.right;s+=rightMark(Q[i],Q[(i+1)%3],Q[(i+2)%3])}
+  if(o.alt){const F={x:Q[2].x,y:Q[0].y};s+=ln(Q[2].x,Q[2].y,F.x,F.y,'var(--tg)',2.5,'stroke-dasharray="5 4"')+rightMark(F,Q[2],Q[1],10)+tx(F.x+8,(F.y+Q[2].y)/2+5,'h','var(--tg)',16,'font-weight:800')}
+  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${o.aria||'Figura da questão'}">${s}</svg>`;
+}
+function figQ2(){
+  const u=22,C={x:40,y:160},A={x:40+8*u,y:160},B={x:40,y:160-6*u};
+  const E={x:B.x+0.6*(A.x-B.x),y:B.y+0.6*(A.y-B.y)},D={x:A.x-5*u,y:160};
+  const pt=p=>`${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+  let s=pth(`M${pt(B)}L${pt(C)}L${pt(D)}L${pt(E)}Z`,'var(--tg-soft)','none',0)+pth(`M${pt(A)}L${pt(D)}L${pt(E)}Z`,'var(--hi-soft)','none',0);
+  s+=pth(`M${pt(B)}L${pt(C)}L${pt(A)}Z`,'none','var(--ink)',2.5)+ln(D.x,D.y,E.x,E.y,'var(--ink)',2.5)+rightMark(C,B,A,12)+rightMark(E,A,D,10);
+  s+=tx(C.x-8,C.y+18,'C','var(--ink)',16,'font-weight:800','text-anchor="end"')+tx(A.x+8,A.y+6,'A','var(--ink)',16,'font-weight:800')+tx(B.x-8,B.y+4,'B','var(--ink)',16,'font-weight:800','text-anchor="end"')+tx(D.x-4,D.y+20,'D','var(--ink)',16,'font-weight:800','text-anchor="middle"')+tx(E.x+8,E.y-6,'E','var(--ink)',16,'font-weight:800');
+  s+=tx(6,C.y-6*u/2+5,'6 cm','var(--sen)',14,'','text-anchor="start"')+tx(A.x-30,A.y-12,'α','var(--ink)',17,'font-style:italic','text-anchor="middle"');
+  return `<svg viewBox="0 0 300 190" role="img" aria-label="Triângulo ABC reto em C com os pontos D e E">${s}</svg>`;
+}
+function figQ7(){
+  const A={x:45,y:150},C={x:150,y:168},D={x:255,y:142},B={x:255,y:38};
+  const pt=p=>`${p.x} ${p.y}`;
+  let s=pth('M15 158L180 186L285 150L120 126Z','var(--tg-soft)','none',0);
+  s+=ln(A.x,A.y,C.x,C.y,'var(--ink)',3)+ln(C.x,C.y,B.x,B.y,'var(--ink)',3)+ln(A.x,A.y,B.x,B.y,'var(--ink-2)',2,'stroke-dasharray="6 5"')+ln(C.x,C.y,D.x,D.y,'var(--ink-2)',2,'stroke-dasharray="6 5"')+ln(B.x,B.y,D.x,D.y,'var(--ink)',4);
+  s+=rightMark(D,B,C,10);
+  s+=tx(A.x-6,A.y-8,'A','var(--ink)',16,'font-weight:800','text-anchor="end"')+tx(C.x-4,C.y+20,'C','var(--ink)',16,'font-weight:800','text-anchor="middle"')+tx(D.x+8,D.y+16,'D','var(--ink)',16,'font-weight:800')+tx(B.x+8,B.y+4,'B','var(--ink)',16,'font-weight:800');
+  s+=tx(95,178,'60 m','var(--sen)',14,'','text-anchor="middle"')+tx(A.x+30,A.y+2,'30°','var(--ink)',13)+tx(C.x-30,C.y-18,'105°','var(--ink)',13)+tx(C.x+34,C.y-20,'45°','var(--ink)',13)+tx(B.x+8,(B.y+D.y)/2+4,'h','var(--tg)',16,'font-weight:800');
+  return `<svg viewBox="0 0 300 190" role="img" aria-label="Esquema do mastro BD com os pontos A e C no chão">${s}</svg>`;
+}
+function figIns(){
+  const O={x:150,y:95},r=62;
+  const pos=t=>({x:O.x+r*Math.cos(rad(t)),y:O.y-r*Math.sin(rad(t))});
+  const A0=45,B0=60,PB=pos(270-A0),PC=pos(270+A0),PA=pos(270+A0+2*B0);
+  const pt=p=>`${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+  let s=circ(O.x,O.y,r,'none','var(--ink-2)',2)+pth(`M${pt(PA)}L${pt(PB)}L${pt(PC)}Z`,'var(--cos-soft)','var(--ink)',2.5);
+  s+=ln(O.x,O.y,O.x+r,O.y,'var(--sen)',2.5,'stroke-dasharray="5 4"')+circ(O.x,O.y,3,'var(--ink)','none',0)+tx(O.x+r/2,O.y-6,'6 cm','var(--sen)',13,'','text-anchor="middle"');
+  [[PA,'A'],[PB,'B'],[PC,'C']].forEach(([P,l])=>{const q=outsFrom(O,P,14);s+=tx(q.x,q.y+6,l,'var(--ink)',16,'font-weight:800','text-anchor="middle"')});
+  return `<svg viewBox="0 0 300 190" role="img" aria-label="Triângulo ABC inscrito em uma circunferência de raio 6 cm">${s}</svg>`;
+}
+
+/* ---------- módulo 11: questões ---------- */
+const QS=[
+  {t:'ret',tag:'Estilo ENEM',q:'Uma rampa de acesso deve subir 1,2 m de altura e formar um ângulo de 30° com o solo. Qual deve ser o comprimento da rampa?',
+   alts:['0,6 m','1,04 m','1,39 m','2,08 m','2,4 m'],c:4,
+   fig:()=>figTri({names:['','',''],a:1.2,b:2.4,c:2.078,la:'1,2 m',lb:'?',angle:{v:0,label:'30°'},right:1,aria:'Rampa formando 30 graus com o chão'}),
+   hint:'A altura é o cateto oposto ao ângulo de 30° e a rampa é a hipotenusa. Qual razão liga o oposto e a hipotenusa?',
+   sol:['A altura (1,2 m) é o cateto oposto ao ângulo de 30° e a rampa é a hipotenusa.','Relação: sen 30° = oposto ÷ hipotenusa, então 1/2 = 1,2 ÷ x.','Logo x = 1,2 ÷ (1/2) = 2,4 m.','Os outros valores aparecem com a razão errada: 0,6 é 1,2 · sen 30°, 1,04 é 1,2 · cos 30°, 1,39 é 1,2 ÷ cos 30° e 2,08 é a distância horizontal, 1,2 ÷ tg 30°.']},
+  {t:'ret',tag:'Inspirada na Famerp 2025',q:'No triângulo retângulo ABC, reto em C, temos BC = 6 cm e sen α = 3/5, em que α é o ângulo do vértice A. O ponto E está sobre AB, com BE = 6 cm, e o ponto D está sobre AC de modo que DE é perpendicular a AB. Qual é a área do quadrilátero BCDE?',
+   alts:['6 cm²','12 cm²','18 cm²','21 cm²','24 cm²'],c:2,fig:figQ2,
+   hint:'Descubra AB e AC com o seno e Pitágoras. Depois calcule a área do triângulo grande e tire a do triângulo pequeno ADE.',
+   sol:['De sen α = BC ÷ AB = 3/5 e BC = 6, sai AB = 10 cm. Por Pitágoras, AC = 8 cm.','Como BE = 6, sobra AE = 4 cm.','No triângulo ADE, reto em E, cos α = 4/5 = AE ÷ AD, então AD = 5 cm e DE = 3 cm.','Área de ABC = 6 · 8 ÷ 2 = 24. Área de ADE = 4 · 3 ÷ 2 = 6.','A área pedida é a diferença: 24 − 6 = 18 cm².']},
+  {t:'ret',tag:'Estilo ENEM',q:'Em certo momento do dia, os raios de sol formam 30° com o solo e um prédio projeta uma sombra de 60 m. Considerando √3 ≈ 1,73, qual é a altura do prédio?',
+   alts:['20 m','30 m','34,6 m','52 m','103,8 m'],c:2,
+   fig:()=>figTri({names:['','',''],a:34.64,b:69.28,c:60,la:'h',lc:'60 m',angle:{v:0,label:'30°'},right:1,aria:'Prédio, sombra e raio de sol'}),
+   hint:'A altura é o cateto oposto ao ângulo do sol e a sombra é o cateto adjacente.',
+   sol:['A altura é o cateto oposto a 30° e a sombra é o cateto adjacente.','tg 30° = altura ÷ sombra, com tg 30° = √3/3.','altura = 60 · √3/3 = 20√3 ≈ 20 · 1,73 = 34,6 m.','Os valores 30 m e 52 m vêm de 60 · sen 30° e 60 · cos 30°, ou seja, da razão errada.']},
+  {t:'ciclo',tag:'Estilo vestibular',q:'O valor de sen 2100° + cos 1500° é:',
+   alts:['(1 − √3)/2','(1 + √3)/2','−(1 + √3)/2','(√3 − 1)/2','0'],c:0,fig:null,
+   hint:'Tire voltas inteiras de 360° de cada ângulo e veja em que quadrante o resultado cai.',
+   sol:['2100° = 5 · 360° + 300°, então sen 2100° = sen 300°.','300° está no 4º quadrante, onde o seno é negativo: sen 300° = −sen 60° = −√3/2.','1500° = 4 · 360° + 60°, então cos 1500° = cos 60° = 1/2.','Soma: −√3/2 + 1/2 = (1 − √3)/2.']},
+  {t:'ret',tag:'Inspirada na Unicamp',q:'Um triângulo retângulo tem hipotenusa de 2 cm e um dos ângulos agudos mede 15°. Qual é a área desse triângulo? (Desafio: use a identidade sen 2x = 2 · sen x · cos x.)',
+   alts:['1/4 cm²','√3/4 cm²','1/2 cm²','√2/2 cm²','1 cm²'],c:2,
+   fig:()=>figTri({names:['','',''],a:0.5176,b:2,c:1.9319,lb:'2 cm',angle:{v:0,label:'15°'},right:1,aria:'Triângulo retângulo de hipotenusa 2 e ângulo de 15 graus'}),
+   hint:'Os catetos valem 2 · sen 15° e 2 · cos 15°. Na área aparece o produto sen 15° · cos 15°.',
+   sol:['Os catetos medem 2 · sen 15° e 2 · cos 15°.','Área = (2 sen 15° · 2 cos 15°) ÷ 2 = 2 · sen 15° · cos 15°.','Pela identidade do arco duplo, 2 · sen 15° · cos 15° = sen 30° = 1/2 cm².','Conferindo com decimais: 2 · 0,2588 · 0,9659 ≈ 0,5.']},
+  {t:'cos',tag:'Inspirada na Unesp 2009',q:'Ana e Beto jogam dardos em um alvo circular de centro O. O dardo de Ana atinge o ponto P, a 7 cm do centro. O dardo de Beto atinge o ponto M, e a distância entre os dois dardos é PM = 13 cm. Sabendo que o ângulo POM mede 120°, qual é a distância de M ao centro?',
+   alts:['5 cm','6 cm','8 cm','10 cm','15 cm'],c:2,
+   fig:()=>figTri({names:['O','P','M'],a:13,b:8,c:7,la:'13 cm',lb:'x',lc:'7 cm',angle:{v:0,label:'120°'},aria:'Triângulo OPM com ângulo de 120 graus em O'}),
+   hint:'Chame OM de x. O lado PM está oposto ao ângulo de 120°. Que lei liga dois lados, o ângulo entre eles e o terceiro lado?',
+   sol:['Chame OM de x. No triângulo OPM, o lado PM = 13 está oposto ao ângulo de 120°.','Lei dos cossenos: 13² = x² + 7² − 2 · x · 7 · cos 120°.','Como cos 120° = −1/2: 169 = x² + 49 + 7x, isto é, x² + 7x − 120 = 0.','As raízes são x = (−7 ± 23) ÷ 2. Só serve a positiva: x = 8 cm.','O valor 15 aparece quando se troca o sinal do termo do cosseno.']},
+  {t:'sen',tag:'Inspirada na Unesp 2011',q:'Uma pessoa está no ponto A, na margem de um rio, e vê do outro lado o topo B de um mastro. Ela caminha 60 m até o ponto C. Sendo D o pé do mastro, ela mede ∠BAC = 30°, ∠ACB = 105° e o ângulo de elevação do topo visto de C, ∠BCD, igual a 45°. Qual é a altura do mastro?',
+   alts:['15 m','30 m','30√2 m','30√3 m','60 m'],c:1,fig:figQ7,
+   hint:'Primeiro ache ∠ABC no triângulo ABC e use a lei dos senos para obter BC. Depois use o triângulo retângulo BCD.',
+   sol:['No triângulo ABC: ∠ABC = 180° − 30° − 105° = 45°.','Lei dos senos: BC ÷ sen 30° = AC ÷ sen 45°, então BC = 60 · (1/2) ÷ (√2/2) = 30√2 m.','No triângulo retângulo BCD, sen 45° = h ÷ BC, então h = 30√2 · √2/2 = 30 m.','O valor 30√2 é o comprimento de BC, ainda não a altura.']},
+  {t:'cos',tag:'Inspirada na Fuvest',q:'Os lados de um triângulo medem √2, √5 e 3. Qual é o comprimento da altura relativa ao maior lado?',
+   alts:['√2/2','1','√2','3/2','√5/2'],c:1,
+   fig:()=>figTri({names:['','',''],a:Math.sqrt(5),b:Math.sqrt(2),c:3,la:'√5',lb:'√2',lc:'3',alt:true,aria:'Triângulo de lados raiz de 2, raiz de 5 e 3 com a altura relativa ao lado 3'}),
+   hint:'Ache o ângulo entre os lados √2 e 3 com a lei dos cossenos. Depois a altura é √2 vezes o seno desse ângulo.',
+   sol:['O maior lado é 3. Seja α o ângulo entre os lados √2 e 3, oposto ao lado √5.','Lei dos cossenos: (√5)² = (√2)² + 3² − 2 · √2 · 3 · cos α, ou seja, 5 = 11 − 6√2 · cos α.','Então cos α = 6 ÷ (6√2) = √2/2 e α = 45°.','A altura relativa ao lado 3 é h = √2 · sen 45° = √2 · √2/2 = 1.']},
+  {t:'sen',tag:'Estilo vestibular',q:'Um triângulo ABC está inscrito em uma circunferência de raio 6 cm, com ∠A = 45° e ∠B = 60°. Quanto mede o lado AC?',
+   alts:['6 cm','6√2 cm','6√3 cm','12 cm','12√3 cm'],c:2,fig:figIns,
+   hint:'O lado AC está oposto a qual ângulo? Na lei dos senos, cada lado dividido pelo seno do ângulo oposto vale 2R.',
+   sol:['O lado AC está oposto ao ângulo B.','Lei dos senos com o raio: AC ÷ sen B = 2R.','AC = 2 · 6 · sen 60° = 12 · √3/2 = 6√3 cm.','O ângulo A não foi necessário aqui. Ele serviria para achar BC = 12 · sen 45° = 6√2 cm.']},
+  {t:'cos',tag:'Estilo ENEM',q:'Duas estradas retas saem da mesma cidade formando um ângulo de 60°. Ao mesmo tempo, dois carros partem da cidade, um em cada estrada, a 80 km/h e a 60 km/h. Depois de 1,5 hora, qual é a distância aproximada entre eles em linha reta? (Use √13 ≈ 3,6.)',
+   alts:['30 km','90 km','108 km','150 km','210 km'],c:2,
+   fig:()=>figTri({names:['C','A','B'],a:108.17,b:90,c:120,la:'?',lb:'90 km',lc:'120 km',angle:{v:0,label:'60°'},aria:'Duas estradas partindo da cidade C com ângulo de 60 graus'}),
+   hint:'Calcule quanto cada carro andou. Esses dois percursos são lados de um triângulo e o ângulo entre eles é 60°.',
+   sol:['Distâncias percorridas: 80 · 1,5 = 120 km e 60 · 1,5 = 90 km.','Lei dos cossenos: d² = 120² + 90² − 2 · 120 · 90 · cos 60°.','d² = 14400 + 8100 − 10800 = 11700, então d = 30√13 ≈ 30 · 3,6 = 108 km.','O valor 150 km apareceria com ângulo de 90°, e 210 km seria somar os percursos.']}
+];
+function m11(){
+  const TEMAS=[['all','Todas'],['ret','Triângulo retângulo'],['ciclo','Ciclo trigonométrico'],['sen','Lei dos senos'],['cos','Lei dos cossenos']];
+  const NOME={ret:'Triângulo retângulo',ciclo:'Ciclo trigonométrico',sen:'Lei dos senos',cos:'Lei dos cossenos'};
+  const tried=new Set(),right=new Set();
+  $('#vqFilter').innerHTML=TEMAS.map(([k,l],i)=>`<button class="btn sm" type="button" data-t="${k}" aria-pressed="${i===0}">${l}</button>`).join('');
+  $('#vqList').innerHTML=QS.map((q,i)=>`<article class="vq" data-t="${q.t}" data-i="${i}">
+    <div class="vq-top"><span class="tag">${NOME[q.t]}</span><span class="tag alt">${q.tag}</span></div>
+    <div class="vq-body"><div>
+      <p class="vq-text"><b>Questão ${i+1}.</b> ${q.q}</p>
+      <div class="opts">${q.alts.map((a,j)=>`<button class="opt" type="button" data-j="${j}"><span class="l">${'ABCDE'[j]}</span><span>${a}</span></button>`).join('')}</div>
+      <p class="fb" aria-live="polite"></p>
+      <div class="vq-actions"><button class="btn sm" type="button" data-a="hint">Ver dica</button><button class="btn sm" type="button" data-a="sol">Ver resolução</button></div>
+      <p class="hintbox" hidden>${q.hint}</p>
+      <ol class="solbox" hidden>${q.sol.map(s=>`<li>${s}</li>`).join('')}</ol>
+    </div>${q.fig?`<div class="vq-fig">${q.fig()}</div>`:''}</div></article>`).join('');
+  const score=()=>{$('#vqScore').textContent=`Respondidas: ${tried.size} de ${QS.length}. Acertos de primeira: ${right.size}.`;if(tried.size>=5)markDone('m11')};
+  score();
+  $('#vqFilter').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    $$('#vqFilter button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+    $$('#vqList .vq').forEach(a=>{a.hidden=!(b.dataset.t==='all'||a.dataset.t===b.dataset.t)});
+  });
+  $('#vqList').addEventListener('click',e=>{
+    const art=e.target.closest('.vq');if(!art)return;
+    const i=+art.dataset.i,q=QS[i],fb=$('.fb',art);
+    const opt=e.target.closest('.opt');
+    if(opt){
+      const j=+opt.dataset.j;
+      if(!tried.has(i)){tried.add(i);if(j===q.c)right.add(i)}
+      if(j===q.c){
+        opt.classList.add('ok');$$('.opt',art).forEach(x=>x.disabled=true);
+        fb.className='fb good';fb.textContent='Correta. Confira a resolução para ver o caminho completo.';
+        $('.solbox',art).hidden=false;
+      }else{
+        opt.classList.add('no');opt.disabled=true;
+        fb.className='fb bad';fb.textContent='Não é essa. Abra a dica e tente de novo.';
+      }
+      score();return;
+    }
+    const act=e.target.closest('[data-a]');
+    if(act){const box=$(act.dataset.a==='hint'?'.hintbox':'.solbox',art);box.hidden=!box.hidden}
+  });
+}
+
+/* ---------- início ---------- */
+function init(){
+  [initShell,mountChecks,hero,m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11].forEach(f=>{try{f()}catch(err){console.error('Erro em '+f.name,err)}});
+}
+init();
+})();
+</script>
+</body>
+</html>
